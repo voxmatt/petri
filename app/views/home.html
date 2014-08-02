@@ -1,0 +1,24 @@
+<ion-pane>
+  <ion-content>
+
+    <ion-slide-box on-slide-changed="slideHasChanged($index)">
+      
+      <ion-slide ng-repeat="event in events">
+        <div class="orbit-circle-container contains-{{event.peeps.length}}-orbit-circles">
+          <div class="orbit-circle" ng-repeat="peep in event.peeps" ng-click="clickPeep(peep)">
+            <span class="orbit-circle-content">{{peep.name}}</span>
+          </div>
+        </div>
+        <div class="primary-circle">
+          <label>{{getLabel(event.type)}}</label>
+          <h2>{{event.location.name}}</h2>
+        </div>
+      </ion-slide>
+
+    </ion-slide-box>
+
+    <div class="action-button" ng-click="newEvent()">
+    </div>
+
+  </ion-content>
+</ion-pane>
