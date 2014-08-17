@@ -18,28 +18,39 @@ angular.module('SupAppIonic', [
       }
       if(window.StatusBar) {
         // org.apache.cordova.statusbar required
-        StatusBar.overlaysWebView(false);
-        StatusBar.backgroundColorByName('gray');
+        StatusBar.styleDefault();
       }
     });
   })
 
+  // needed for route security provider to work
+  .constant('loginRedirectPath', '/login')
+
   .config(function($stateProvider, $urlRouterProvider) {
     
-    $urlRouterProvider.otherwise('/home');
+    $urlRouterProvider.otherwise('/onboarding');
 
     $stateProvider
         
-      // HOME STATES AND NESTED VIEWS ========================================
-      .state('home', {
-        url: '/home',
-        templateUrl: 'views/home.html',
-        controller: 'HomeCtrl'
+      .state('events', {
+        authRequired: true,
+        url: '/events',
+        templateUrl: 'views/events.html',
+        controller: 'EventsCtrl'
       })
       
-      // ABOUT PAGE AND MULTIPLE NAMED VIEWS =================================
-      .state('about', {
-        // we'll get to this in a bit       
+      .state('onboarding', {
+        authRequired: true,
+        url: '/onboarding',
+        templateUrl: 'views/onboarding.html',
+        controller: 'OnboardingCtrl'
+      })
+
+      .state('login', {
+        authRequired: false,
+        url: '/login',
+        templateUrl: 'views/login.html',
+        controller: 'LoginCtrl'
       })
     ;
   })

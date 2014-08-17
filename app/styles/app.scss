@@ -1,0 +1,12 @@
+//BOURBON
+@import "bourbon/bourbon";
+
+//VARS
+@import "vars";
+
+//FUNCTIONS & MIXINS
+@import "trigFunctions";
+@import "mixins";
+
+//STYLES
+@import "main"

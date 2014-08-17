@@ -1,0 +1,78 @@
+//unit conversions
+@function convert-angle($value, $unit-name) {
+  $factors: (
+    rad: 1rad,
+    deg: 180deg/pi(),
+    degNoUnit: 180/pi(),
+    grad: 200grad/pi(),
+    turn: .5turn/pi()
+  );
+
+  @if not unitless($value) {
+    @warn '`#{$value}` should be unitless';
+    @return false;
+  }
+
+  @if not map-has-key($factors, $unit-name) {
+    @warn 'unit `#{$unit-name}` is not a valid unit - please make sure it is either `deg`, `rad`, `grad` or `turn`';
+    @return false;
+  }
+
+  @return $value*map-get($factors, $unit-name);
+}
+
+//sets how accurate these calculations are
+$default-threshold: pi()/180/10;
+
+// we need some trigonometry functions to get angles
+@function asin($z, $unit-name: deg, $threshold: $default-threshold) {
+  $sum: 0;
+  $complement: false;
+  $sign: $z/abs($z);
+  $z: abs($z);
+
+  @if $z > sin(pi()/4) {
+    $complement: true;
+    $z: sqrt(1 - pow($z, 2));
+  }
+
+  $term: $z;
+  $i: 0;
+  $k: 1;
+
+  @while $term > $threshold {
+    $sum: $sum + $term;
+
+    $i: $i + 1;
+    $k: $k*(2*$i - 1)/(2*$i);
+    $j: 2*$i + 1;
+
+    $term: $k*pow($z, $j)/$j;
+  }
+
+  @return convert-angle($sign*(if($complement, pi()/2 - $sum, $sum)), $unit-name);
+}
+
+//acos is really what we need for our isoceles triangles
+@function acos($z, $unit-name: deg, $threshold: $default-threshold) {
+  @return convert-angle(pi()/2, $unit-name) - asin($z, $unit-name, $threshold);
+}
+
+@function atan($z, $unit-name: deg, $threshold: $default-threshold) {
+  @return asin($z/sqrt(1 + pow($z, 2)), $unit-name, $threshold);
+}
+
+
+//finally, what I actually needed
+@function getIsocelesAngle($shortSide, $longSide, $unitless: true) {
+  $a2: $shortSide * $shortSide;
+  $b2: $longSide * $longSide;
+  $c2: $b2;
+  $acosInput: ($b2 + $c2 - $a2) / (2 * $longSide * $longSide);
+  @if ($unitless) {
+    @return acos($acosInput, 'degNoUnit');
+  }
+  @else {
+    @return acos($acosInput, 'deg');
+  }
+}

@@ -1,0 +1,85 @@
+body {
+  position: absolute;
+  font-family: 'Open Sans', sans-serif;
+  color: #e7e7e7;
+  background-color: black;
+  height:100%;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+  color: #e7e7e7;
+}
+
+//stupid height hacks that I shouldn't have to do...
+.main-view,
+.slider{
+  height: 100%;
+}
+
+.primary-circle{
+  @include create-circle($primaryCircleRadiusPx, true);
+  @include flex-centering();
+  position:absolute;
+  background: grey;
+  font-weight: 400;
+  color: white;
+
+  label {
+    @include set-position(20px, 30px, null, 30px);
+    font-size:13px;
+    font-weight:300;
+  }
+}
+
+.orbit-circle{
+  @include create-circle($orbitCircleRadiusPx, true);
+  @include flex-centering();
+  background: grey;
+  color: white;
+  font-size: 10px;
+  font-weight:300;
+  text-transform: uppercase;
+}
+
+.action-button{
+  @include create-circle($actionBtnRadiusPx, false);
+  @include set-position(null, calc(50% - #{$actionBtnRadiusPx}), 20px, null, fixed);
+  @include flex-centering();
+  background: grey;
+  color: white;
+  font-size:54px;
+  font-weight:300;
+  
+  &:before{
+    @include flex-centering();
+    content:"+";
+    line-height: $actionBtnRadiusPx * 2;
+    margin-top: -3px;
+  }
+}
+
+@include create-orbit-circle-classes();
+
+
+/* Responsive: Portrait tablets and up */
+@media screen and (min-width: 768px) {
+  .container {
+    max-width: 730px;
+  }
+
+  /* Remove the padding we set earlier */
+  .header,
+  .marketing,
+  .footer {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  /* Space out the masthead */
+  .header {
+    margin-bottom: 30px;
+  }
+  /* Remove the bottom border on the jumbotron for visual effect */
+  .jumbotron {
+    border-bottom: 0;
+  }
+}
