@@ -1,4 +1,4 @@
-<div class="bar bar-header bar-dark">
+<div class="bar bar-header">
   <h1 class="title">{{step.title}}</h1>
 </div>
 
@@ -19,7 +19,7 @@
 	    <input ng-model="newUser.tel" type="tel" name="tel" required>
 	  </label>
 
-		<button type="submit" ng-disabled="!validTel(newUser.tel)" class="button button-full button-positive" ng-click="addTel(newUser.tel)">Continue</button>
+		<button type="submit" ng-disabled="!validTel(newUser.tel)" class="button button-full button-royal" ng-click="addTel(newUser.tel)">Continue</button>
 
 	</form>
 
@@ -39,7 +39,10 @@
 			</p>
 		</div>
 
-		<button type="submit" class="button button-full button-positive" ng-click="addContacts()">Find Friends</button>
+		<button type="submit" ng-disabled="loading" class="button button-full button-royal" ng-click="addContacts()">
+			<span ng-if="loading">LOADING</span>
+			<span ng-if="!loading">Find Friends</span>
+		</button>
 
 	</form>
 
@@ -64,7 +67,7 @@
     	<input ng-model="currentUser.lastName" type="text" name="lastName" required>
   	</label>
 
-		<button type="submit" class="button button-full button-positive" ng-click="saveName()">Finished!</button>
+		<button type="submit" class="button button-full button-royal" ng-click="saveName()">Finished!</button>
 
 	</form>
 

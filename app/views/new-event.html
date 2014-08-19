@@ -1,0 +1,43 @@
+<div class="orbit-circle-container contains-{{step.options.length + 1}}-orbit-circles">
+	<div class="orbit-circle" ng-repeat="option in step.options | limitTo:10" ng-click="selectOption(step.num, option)" ng-class="{'selected': option.isSelected}">
+		<span class="orbit-circle-content">{{option.name}}</span>
+	</div>
+	<div ng-click="showMoreOptions(step.num)" class="orbit-circle">search</div>
+</div>
+<div class="primary-circle">
+	<h2>{{step.text}}</h2>
+</div>
+<div class="orbit-circle orbit-circle-bottom" ng-click="done(step.num)">
+	<span ng-if="step.num == 1">Cancel</span>
+	<span ng-if="step.num != 1">Done</span>
+</div>
+
+<div ng-if="moreOptions.show">
+  <ion-popover-view>
+    <ion-header-bar>
+      <h1 class="title">{{moreOptions.title}}</h1>
+    </ion-header-bar>
+    <ion-content>
+    	<!-- Locations List -->
+      <ion-list ng-if="step.num == 2">
+      	<ion-item class="item item-input">
+				  <input type="text" placeholder="Search" ng-model="moreOptions.locationFilter">
+      	</ion-item>
+      	<ion-item ng-repeat="item in moreOptions.options | filter:moreOptions.locationFilter">
+      		{{item.name}}
+      	</ion-item>
+      </ion-list>
+			
+			<!-- People List -->
+      <ion-list ng-if="step.num == 3">
+      	<ion-item class="item item-input">
+				  <input type="text" placeholder="Search" ng-model="moreOptions.peepsFilter">
+      	</ion-item>
+      	<ion-item ng-repeat="item in moreOptions.options | filter:moreOptions.peepsFilter">
+      		{{item.name}}
+      	</ion-item>
+      </ion-list>
+
+    </ion-content>
+  </ion-popover-view>
+</div>

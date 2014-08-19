@@ -1,6 +1,6 @@
-<ion-slide-box on-slide-changed="slideHasChanged($index)">
+<ion-slide-box on-slide-changed="slideHasChanged($index)" show-pager="false">
   
-  <ion-slide ng-repeat="event in events">
+  <ion-slide ng-repeat="(time, event) in events">
     <div class="orbit-circle-container contains-{{event.peeps.length}}-orbit-circles">
       <div class="orbit-circle" ng-repeat="peep in event.peeps" ng-click="clickPeep(peep)">
         <span class="orbit-circle-content">{{peep.name}}</span>
@@ -9,36 +9,9 @@
     <div class="primary-circle">
       <label>{{getLabel(event.type)}}</label>
       <h2>{{event.location.name}}</h2>
+      <span class="event-time-ago">{{getTimeAgo(time)}}</span>
     </div>
   </ion-slide>
 
 </ion-slide-box>
-
-<button class="button button-outline button-full button-positive" ng-click="loadContacts()">Load Contacts</button>
-
-<div ng-repeat="contact in contacts">
-
-  <label>Name</label>
-  <div>{{contact.name.givenName}} {{contact.name.familyName}}</div>
-  
-  <label>Addresses</label>
-  <div ng-repeat="address in contact.addresses">
-    {{ address.streetAddress }}<br>
-    {{ address.locality }}, {{ address.region }} {{ address.postalCode }}<br>
-  </div>
-
-  <label>Emails</label>
-  <div ng-repeat="email in contact.email">
-    {{ email.value }}, {{ email.type }}, {{ email.pref }}
-  </div>
-
-  <label>Phone Numbers</label>
-  <div ng-repeat="number in contact.phoneNumbers">
-    {{ number.value }}, {{ number.type }}, {{ number.pref }}
-  </div>
-
-  <label>Photos</label>
-  <div ng-repeat="photo in contact.photos">
-    {{ photo.value }}, {{ photo.type }}, {{ photo.pref }}
-  </div>
-</div>
+<div ng-click="newEvent()" class="action-button"></div>

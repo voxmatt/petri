@@ -23,7 +23,7 @@ angular.module('SupAppIonic')
 				password: $scope.login.password,
 				rememberMe: true
 			}).then(function(){
-				$location.path('/events');
+				$location.path('/onboarding');
 			}, function(error) {
 				showError(error);
 			});

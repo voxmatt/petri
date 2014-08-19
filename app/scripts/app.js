@@ -38,6 +38,13 @@ angular.module('SupAppIonic', [
         templateUrl: 'views/events.html',
         controller: 'EventsCtrl'
       })
+
+      .state('login', {
+        authRequired: false,
+        url: '/login',
+        templateUrl: 'views/login.html',
+        controller: 'LoginCtrl'
+      })
       
       .state('onboarding', {
         authRequired: true,
@@ -46,11 +53,11 @@ angular.module('SupAppIonic', [
         controller: 'OnboardingCtrl'
       })
 
-      .state('login', {
-        authRequired: false,
-        url: '/login',
-        templateUrl: 'views/login.html',
-        controller: 'LoginCtrl'
+      .state('newEvent', {
+        authRequired: true,
+        url: '/new-event',
+        templateUrl: 'views/new-event.html',
+        controller: 'NewEventCtrl'
       })
     ;
   })

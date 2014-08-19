@@ -3,10 +3,12 @@
 
 //VARS
 @import "vars";
+@import "typography";
 
 //FUNCTIONS & MIXINS
 @import "trigFunctions";
 @import "mixins";
 
 //STYLES
-@import "main"
+@import "main";
+@import "events";

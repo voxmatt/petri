@@ -17,8 +17,26 @@ angular.module('SupAppIonic')
 			return deferred.promise;
 		}
 
+		function saveEvent(newEvent){
+
+			var deferred = $q.defer();
+			var cleanEvent = angular.copy(newEvent);
+			var key = Date.now();
+
+			ref.child(key).set(cleanEvent, function(error){
+				if (error) {
+					deferred.reject(error);
+				} else {
+					deferred.resolve(cleanEvent);
+				}
+			});
+
+			return deferred.promise;
+		}
+
 		return {
-			getEvents: getEvents
+			getEvents: getEvents,
+			saveEvent: saveEvent
 		};
 	}
 );

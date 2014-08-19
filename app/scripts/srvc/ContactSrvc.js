@@ -42,6 +42,25 @@ angular.module('SupAppIonic')
 			return deferred.promise;
 		}
 
+		function getUserContacts(){
+			var deferred = $q.defer();
+
+			UserSrvc.getCurrentUser().then(function(user){
+				userContactsRef.child(user.contactId).on('value', function(snapshot) {
+					if (snapshot) {
+						var contacts = snapshot.val();
+						deferred.resolve(contacts);
+					} else {
+						deferred.reject('Could not find user contacts');
+					}
+				});
+			}, function(error) {
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		}
+
 		// this function does a metric fuck-ton...
 		function updateUserContactsFromLocal(){
 
@@ -232,6 +251,7 @@ angular.module('SupAppIonic')
 
 		return {
 			getLocalContacts: getLocalContacts,
+			getUserContacts: getUserContacts,
 			updateUserContactsFromLocal: updateUserContactsFromLocal,
 			updateUserContact: updateUserContact,
 			getContactByPhoneNumber: getContactByPhoneNumber

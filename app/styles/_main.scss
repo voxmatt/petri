@@ -1,13 +1,11 @@
 body {
   position: absolute;
   font-family: 'Open Sans', sans-serif;
-  color: #e7e7e7;
-  background-color: black;
   height:100%;
 }
 
 h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
-  color: #e7e7e7;
+  font-family: 'Open Sans', sans-serif;
 }
 
 //stupid height hacks that I shouldn't have to do...
@@ -29,6 +27,14 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
     font-size:13px;
     font-weight:300;
   }
+
+  .event-time-ago {
+    position: absolute;
+    bottom: 10px;
+    left: 60px;
+    right: 60px;
+    font-size: 11px;
+  }
 }
 
 .orbit-circle{
@@ -39,22 +45,31 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   font-size: 10px;
   font-weight:300;
   text-transform: uppercase;
+
+  &.selected {
+    background-color: #ccc;
+  }
+  &.orbit-circle-bottom{
+    $y-translate: #{$primaryCircleRadius + $orbitCircleRadius + $paddingPrimaryOrbit}px;
+    @include transform(translate3d(0, $y-translate, 0) );
+  }
 }
 
 .action-button{
   @include create-circle($actionBtnRadiusPx, false);
   @include set-position(null, calc(50% - #{$actionBtnRadiusPx}), 20px, null, fixed);
-  @include flex-centering();
   background: grey;
   color: white;
   font-size:54px;
   font-weight:300;
   
   &:before{
+    @include set-position(0,0,0,0);
     @include flex-centering();
     content:"+";
     line-height: $actionBtnRadiusPx * 2;
-    margin-top: -3px;
+    margin-top: -2px;
+    margin-right: -2px;
   }
 }
 

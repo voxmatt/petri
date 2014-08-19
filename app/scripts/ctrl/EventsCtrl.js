@@ -29,6 +29,18 @@ angular.module('SupAppIonic')
       return 'event at';
     };
 
+    $scope.getTimeAgo = function(strMillis) {
+      var date = Date.create(parseInt(strMillis));
+      var minutesAgo = date.minutesAgo();
+      if (minutesAgo < 70) {
+        return minutesAgo + ' minutes ago';
+      } else if (70 < minutesAgo < 80) {
+        return 'a little over an hour ago';
+      } else {
+        return date.hoursAgo() + ' hours ago';
+      }
+    };
+
     $scope.newEvent = function () {
       $location.url('/new-event');
     };

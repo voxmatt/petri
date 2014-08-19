@@ -36,14 +36,16 @@ angular.module('SupAppIonic')
 		};
 
 		$scope.addContacts = function() {
-			ContactSrvc.updateUserContactsFromLocal().then(function(){
 
+			$scope.loading = true;
+			ContactSrvc.updateUserContactsFromLocal().then(function(){
+				
 				UserSrvc.getCurrentUser().then(function(user) {
 					$scope.currentUser = user;
 				}, function(error) {
 					console.log(error);
 				});
-
+				$scope.loading = false;
 				$scope.step = steps[2];
 			}, function(error){
 				console.log(error);
