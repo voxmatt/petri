@@ -35,6 +35,7 @@ angular.module('SupAppIonic')
 				options: []
 			}
 		};
+		$scope.moreOptions = { show: 'false', title: '', optons: []};
 		var allPeeps = {};
 
 		$scope.step = steps.type;
@@ -48,6 +49,7 @@ angular.module('SupAppIonic')
 
 				LocationSrvc.getFoursquareVenues(10, option.section, getPhotos, true, false).then(function(result){
 					steps.location.options = processLocations(result.response.groups[0].items, getPhotos);
+					$scope.moreOptions.show = false;
 					$scope.step = steps.location;
 				}, function(error){
 					console.log(error);
@@ -63,10 +65,12 @@ angular.module('SupAppIonic')
 				ContactSrvc.getUserContacts().then(function(result){
 					allPeeps = result;
 					steps.peeps.options = processPeeps(allPeeps, true, 10);
+					$scope.moreOptions.show = false;
 					$scope.step = steps.peeps;
 				}, function(error){
 					console.log(error);
 				});
+
 			} else if (num === 3) {
 
 				if (option.isSelected) {
@@ -113,13 +117,17 @@ angular.module('SupAppIonic')
 			if (stepNum === 1) {
 				$location.url('/events');
 			} else {
-
+				$scope.moreOptions.show = false;
 				EventSrvc.saveEvent(newEvent).then(function(){
 					$location.url('/events');
 				}, function(error) {
 					console.log(error);
 				});
 			}
+		};
+
+		$scope.moreOptionsClose = function() {
+			$scope.moreOptions.show = false;
 		};
 
 		function addCurrentUserToEvent() {

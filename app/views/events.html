@@ -10,6 +10,7 @@
       <label>{{getLabel(event.type)}}</label>
       <h2>{{event.location.name}}</h2>
       <span class="event-time-ago">{{getTimeAgo(time)}}</span>
+      <img ng-if="event.location.photoUrl" ng-src="{{event.location.photoUrl}}" class="event-location-photo">
     </div>
   </ion-slide>
 
