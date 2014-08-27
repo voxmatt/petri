@@ -77,10 +77,30 @@ angular.module('SupAppIonic')
       return url;
     }
 
+    function getStaticDistanceAway(distance, returnMetric) {
+      var feetInMeter = 3.28084;
+      var distanceFeet = distance * feetInMeter;
+
+      if (returnMetric && distance > 500) {
+        var kms = (distance / 1000).toFixed(1);
+        return { num: kms, unit: 'km', display: kms + ' km'};
+      } else if (returnMetric) {
+        return { num: distance, unit: 'km', display: distanceFeet + ' km'};
+      }
+
+      if (distanceFeet > 1760) {
+        var miles = (distanceFeet / 5280).toFixed(1);
+        return { num: miles, unit: 'mi', display: miles + ' mi'};
+      }
+
+      return { num: Math.round(distanceFeet), unit: 'ft', display: Math.round(distanceFeet) + ' ft'};
+    }
+
     return {
       getLatLong: getLatLong,
       getFoursquareVenues: getFoursquareVenues,
-      getFoursqaurePhotoUrl: getFoursqaurePhotoUrl
+      getFoursqaurePhotoUrl: getFoursqaurePhotoUrl,
+      getStaticDistanceAway: getStaticDistanceAway
     };
   }
 );

@@ -71,7 +71,7 @@ angular.module('SupAppIonic').constant('DebuggingData', {
       photos: [
         {
           type: '',
-          value: ''
+          value: '/images/ionic.png'
         }
       ]
     }

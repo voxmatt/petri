@@ -8,7 +8,7 @@
 
 angular.module('SupAppIonic')
 
-	.factory('ContactSrvc', function($q, $firebase, DebuggingData, PhoneSrvc, UserSrvc) {
+	.factory('ContactSrvc', function($q, $firebase, DebuggingData, PhoneSrvc, UserSrvc, PhotoSrvc) {
 
 		  /////////////////////////
 		 // User Contacts Stuff //
@@ -101,7 +101,7 @@ angular.module('SupAppIonic')
 								});
 								if (self){
 									updateGlobalContacts(userPhoneNumber, {userId: user.id});
-									saveContactAsCurrentUser(contact);
+									saveContactAsCurrentUser(userPhoneNumber, contact);
 									validNumbers = [];
 								}
 
@@ -127,9 +127,8 @@ angular.module('SupAppIonic')
 											contactObj.lastName = contact.name.familyName;
 										}
 
-										if (contact.photos) {
-											// TODO: ACTUALLY PROCESS AND UPLOAD PHOTOS
-											contactObj.photos = contact.photos;
+										if (contact.photos && contact.photos[0] && contact.photos[0].value) {
+											PhotoSrvc.saveContactPhoto(number.number, contact.photos[0].value);
 										}
 
 										if (contact.addresses) {
@@ -208,7 +207,7 @@ angular.module('SupAppIonic')
 			return deferred.promise;
 		}
 
-		function saveContactAsCurrentUser(contact) {
+		function saveContactAsCurrentUser(phoneNumber, contact) {
 
 			var saveData = {};
 
@@ -217,9 +216,8 @@ angular.module('SupAppIonic')
 				saveData.lastName = contact.name.familyName;
 			}
 
-			if (contact.photos) {
-				// TODO: ACTUALLY PROCESS AND UPLOAD PHOTOS
-				saveData.photos = contact.photos;
+			if (contact.photos && contact.photos[0] && contact.photos[0].value) {
+				PhotoSrvc.saveContactPhoto(phoneNumber, contact.photos[0].value, true);
 			}
 
 			if (contact.addresses) {
@@ -229,7 +227,7 @@ angular.module('SupAppIonic')
 			return UserSrvc.saveCurrentUserData(saveData);
 		}
 
-		  ///////////////////////////
+			///////////////////////////
 		 // Global Contacts Stuff //
 		///////////////////////////
 

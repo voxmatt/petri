@@ -66,6 +66,10 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
     @include transform(translate3d(0, $y-translate, 0) );
   }
 
+  .orbit-circle-content i.icon {
+    font-size: 25px;
+  }
+
   img {
     @include set-position(0,0,0,0);
     width:100%;

@@ -1,9 +1,16 @@
-<div class="orbit-circle-container contains-{{step.options.length + 1}}-orbit-circles">
+<div class="orbit-circle-container contains-{{step.numOrbitCircles}}-orbit-circles">
 	<div class="orbit-circle" ng-repeat="option in step.options | limitTo:10" ng-click="selectOption(step.num, option)" ng-class="{'selected': option.isSelected}">
-		<span class="orbit-circle-content">{{option.name}}</span>
+		<span ng-if="step.num == 1" class="orbit-circle-content">
+      <i class="icon {{option.icon}}" alt="{{option.name}}"></i>
+    </span>
+    <span ng-if="step.num != 1" class="orbit-circle-content">
+      {{option.name}}
+    </span>
 		<img ng-if="option.photoUrl" ng-src="{{option.photoUrl}}">
 	</div>
-	<div ng-click="showMoreOptions(step.num)" class="orbit-circle">search</div>
+	<div ng-if="step.num != 1" ng-click="showMoreOptions(step.num)" class="orbit-circle">
+    <span class="orbit-circle-content"><i class="icon ion-ios7-search-strong"></i></span> 
+  </div>
 </div>
 <div class="primary-circle">
 	<h2>{{step.text}}</h2>
@@ -29,6 +36,7 @@
       	<ion-item ng-repeat="item in moreOptions.options | filter:moreOptions.locationFilter" ng-click="selectOption(step.num, item)" class="item-avatar">
 					<img ng-if="item.photoUrl" ng-src="{{item.photoUrl}}">
       		<h2>{{item.name}}</h2>
+          <span class="item-note">{{item.tempDistAway}}</span>
       		<p>{{item.location.address}}</p>
       	</ion-item>
       </ion-list>
@@ -38,8 +46,9 @@
       	<ion-item class="item item-input">
 				  <input type="text" placeholder="Search" ng-model="moreOptions.peepsFilter">
       	</ion-item>
-      	<ion-item ng-repeat="item in moreOptions.options | filter:moreOptions.peepsFilter" ng-click="">
-      		{{item.name}}
+      	<ion-item ng-repeat="item in moreOptions.options | filter:moreOptions.peepsFilter" ng-click="upload(item.photoUrl)" class="item-avatar">
+          <img ng-if="item.photoUrl" ng-src="{{item.photoUrl}}">
+      		<h2>{{item.name}}</h2>
       	</ion-item>
       </ion-list>
 

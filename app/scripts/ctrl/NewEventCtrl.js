@@ -7,14 +7,15 @@ angular.module('SupAppIonic')
 			type: {
 				num: 1,
 				text: 'What\'re you thinking?',
+				numOrbitCircles: 7,
 				options: [
-					{name: 'Music', section: null},
-					{name: 'Movie', section: null},
-					{name: 'Drinks', section: 'drinks'},
-					{name: 'Food', section: 'food'},
-					{name: 'Dancing', section: null},
-					{name: 'Out doors', section: 'outdoors'},
-					{name: 'Chillin\'', section: null}
+					{name: 'Music', section: null, icon: 'ion-ios7-musical-notes'},
+					{name: 'Movie', section: null, icon: 'ion-ios7-film'},
+					{name: 'Drinks', section: 'drinks', icon: 'ion-beer'},
+					{name: 'Food', section: 'food', icon: 'ion-pizza'},
+					{name: 'Dancing', section: null, icon: 'ion-ios7-bolt'},
+					{name: 'Out doors', section: 'outdoors', icon: 'ion-ios7-sunny'},
+					{name: 'Chillin\'', section: null, icon: 'ion-thermometer'}
 				],
 			},
 			location: {
@@ -47,9 +48,10 @@ angular.module('SupAppIonic')
 
 				$scope.step = steps.loading;
 
-				LocationSrvc.getFoursquareVenues(10, option.section, getPhotos, true, false).then(function(result){
+				LocationSrvc.getFoursquareVenues(10, option.section, getPhotos, true, true).then(function(result){
 					steps.location.options = processLocations(result.response.groups[0].items, getPhotos);
 					$scope.moreOptions.show = false;
+					steps.location.numOrbitCircles = steps.location.options.length + 1;
 					$scope.step = steps.location;
 				}, function(error){
 					console.log(error);
@@ -66,6 +68,7 @@ angular.module('SupAppIonic')
 					allPeeps = result;
 					steps.peeps.options = processPeeps(allPeeps, true, 10);
 					$scope.moreOptions.show = false;
+					steps.peeps.numOrbitCircles = steps.peeps.options.length + 1;
 					$scope.step = steps.peeps;
 				}, function(error){
 					console.log(error);
@@ -86,7 +89,7 @@ angular.module('SupAppIonic')
 		$scope.showMoreOptions = function(stepNum) {
 			if (stepNum === 2) {
 				var getPhotos = true;
-				LocationSrvc.getFoursquareVenues(100, null, getPhotos, true, false).then(function(result){
+				LocationSrvc.getFoursquareVenues(100, null, getPhotos, true, true).then(function(result){
 					var locations = processLocations(result.response.groups[0].items, getPhotos);
 					$scope.moreOptions = {
 						show: true,
@@ -130,6 +133,10 @@ angular.module('SupAppIonic')
 			$scope.moreOptions.show = false;
 		};
 
+		$scope.upload = function(fileUrl) {
+			console.log( ContactSrvc.getBase64Image(fileUrl) );
+		};
+
 		function addCurrentUserToEvent() {
 			UserSrvc.getCurrentUser().then(function(user){
 				newEvent.createdBy = user.contactId;
@@ -157,6 +164,10 @@ angular.module('SupAppIonic')
 					id: loc.venue.id,
 					location: loc.venue.location || null
 				};
+				if (locOption.location && locOption.location.distance) {
+					var distObj = LocationSrvc.getStaticDistanceAway(locOption.location.distance);
+					locOption.tempDistAway = distObj.display;
+				}
 				processedLocations.push(locOption);
 			});
 

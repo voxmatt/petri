@@ -26,7 +26,9 @@ angular.module('SupAppIonic', [
   // needed for route security provider to work
   .constant('loginRedirectPath', '/login')
 
-  .config(function($stateProvider, $urlRouterProvider) {
+  .config(function($stateProvider, $urlRouterProvider, $compileProvider) {
+
+    $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|ftp|file|blob|content):|data:image\//);
     
     $urlRouterProvider.otherwise('/onboarding');
 
@@ -59,6 +61,7 @@ angular.module('SupAppIonic', [
         templateUrl: 'views/new-event.html',
         controller: 'NewEventCtrl'
       })
+
     ;
   })
 ;
