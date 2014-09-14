@@ -26,11 +26,13 @@ angular.module('SupAppIonic', [
   // needed for route security provider to work
   .constant('loginRedirectPath', '/login')
 
-  .config(function($stateProvider, $urlRouterProvider, $compileProvider) {
+  .config(function($stateProvider, $urlRouterProvider, $compileProvider, $httpProvider) {
 
     $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|ftp|file|blob|content):|data:image\//);
     
     $urlRouterProvider.otherwise('/onboarding');
+
+    delete $httpProvider.defaults.headers.common['X-Requested-With'];
 
     $stateProvider
         

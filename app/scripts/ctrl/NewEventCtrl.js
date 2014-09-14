@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('SupAppIonic')
-	.controller('NewEventCtrl', function ($scope, $q, EventSrvc, LocationSrvc, $location, ContactSrvc, UserSrvc) {
+	.controller('NewEventCtrl', function ($scope, $q, EventSrvc, LocationSrvc, $location, ContactSrvc, UserSrvc, PhotoSrvc) {
 		var newEvent = {};
 		var steps = {
 			type: {
@@ -9,13 +9,13 @@ angular.module('SupAppIonic')
 				text: 'What\'re you thinking?',
 				numOrbitCircles: 7,
 				options: [
-					{name: 'Music', section: null, icon: 'ion-ios7-musical-notes'},
-					{name: 'Movie', section: null, icon: 'ion-ios7-film'},
-					{name: 'Drinks', section: 'drinks', icon: 'ion-beer'},
-					{name: 'Food', section: 'food', icon: 'ion-pizza'},
-					{name: 'Dancing', section: null, icon: 'ion-ios7-bolt'},
-					{name: 'Out doors', section: 'outdoors', icon: 'ion-ios7-sunny'},
-					{name: 'Chillin\'', section: null, icon: 'ion-thermometer'}
+					{name: 'Music', section: null, class:'new-event-music'},
+					{name: 'Movie', section: null, class:'new-event-movie'},
+					{name: 'Drinks', section: 'drinks', class:'new-event-drinks'},
+					{name: 'Food', section: 'food', class:'new-event-food'},
+					{name: 'Dancing', section: null, class:'new-event-dancing'},
+					{name: 'Out doors', section: 'outdoors', class:'new-event-outdoors'},
+					{name: 'Chillin\'', section: null, class:'new-event-chillin'}
 				],
 			},
 			location: {
@@ -27,15 +27,13 @@ angular.module('SupAppIonic')
 				num: 3,
 				text: 'Who\'re you with?'
 			},
-			loading: {
-				text: 'Loading...',
-				options: []
-			},
 			saving: {
 				text: 'Saving...',
 				options: []
 			}
 		};
+
+		$scope.loading = false;
 		$scope.moreOptions = { show: 'false', title: '', optons: []};
 		var allPeeps = {};
 
@@ -46,7 +44,7 @@ angular.module('SupAppIonic')
 				newEvent.type = option.name;
 				var getPhotos = true;
 
-				$scope.step = steps.loading;
+				$scope.loading = true;
 
 				LocationSrvc.getFoursquareVenues(10, option.section, getPhotos, true, true).then(function(result){
 					steps.location.options = processLocations(result.response.groups[0].items, getPhotos);
@@ -55,6 +53,8 @@ angular.module('SupAppIonic')
 					$scope.step = steps.location;
 				}, function(error){
 					console.log(error);
+				}).finally(function(){
+					$scope.loading = false;
 				});
 
 				addCurrentUserToEvent();
@@ -62,7 +62,7 @@ angular.module('SupAppIonic')
 			} else if (num === 2){
 				newEvent.location = option;
 
-				$scope.step = steps.loading;
+				$scope.loading = true;
 
 				ContactSrvc.getUserContacts().then(function(result){
 					allPeeps = result;
@@ -72,6 +72,8 @@ angular.module('SupAppIonic')
 					$scope.step = steps.peeps;
 				}, function(error){
 					console.log(error);
+				}).finally(function(){
+					$scope.loading = false;
 				});
 
 			} else if (num === 3) {
@@ -178,19 +180,26 @@ angular.module('SupAppIonic')
 
 			var processedPeeps = [];
 			for (var key in peeps) {
-			  if (peeps.hasOwnProperty(key) && !peeps[key].isDupeOf && peeps[key].firstName) {
-			    var arrayObj = { id: key, name: peeps[key].firstName };
-			    
-			    if (peeps[key].lastName && abbreviateLastName) {
+				if (peeps.hasOwnProperty(key) && !peeps[key].isDupeOf && peeps[key].firstName) {
+					var arrayObj = { id: key, name: peeps[key].firstName };
+					
+					if (peeps[key].lastName && abbreviateLastName) {
 						arrayObj.name += ' ' + peeps[key].lastName[0] + '.';
-			    } else if (peeps[key].lastName) {
+					} else if (peeps[key].lastName) {
 						arrayObj.name += ' ' + peeps[key].lastName;
-			    }
-			    
-			    processedPeeps.add(arrayObj);
-			  }
-
+					}
+					
+					processedPeeps.add(arrayObj);
+				}
 			}
+
+			processedPeeps.each(function(peep){
+				PhotoSrvc.getContactPhoto(peep.id).then(function(result){
+					if (result) {
+						peep.photoUrl = result.src || null;
+					}
+				});
+			});
 
 			if (limit && processedPeeps.length > limit) {
 				return processedPeeps.to(limit - 1);

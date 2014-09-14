@@ -1,18 +1,16 @@
 <div class="orbit-circle-container contains-{{step.numOrbitCircles}}-orbit-circles">
 	<div class="orbit-circle" ng-repeat="option in step.options | limitTo:10" ng-click="selectOption(step.num, option)" ng-class="{'selected': option.isSelected}">
-		<span ng-if="step.num == 1" class="orbit-circle-content">
-      <i class="icon {{option.icon}}" alt="{{option.name}}"></i>
-    </span>
-    <span ng-if="step.num != 1" class="orbit-circle-content">
+    <span class="orbit-circle-content {{option.class}}">
       {{option.name}}
+      <img ng-if="option.photoUrl" ng-src="{{option.photoUrl}}">
     </span>
-		<img ng-if="option.photoUrl" ng-src="{{option.photoUrl}}">
 	</div>
 	<div ng-if="step.num != 1" ng-click="showMoreOptions(step.num)" class="orbit-circle">
     <span class="orbit-circle-content"><i class="icon ion-ios7-search-strong"></i></span> 
   </div>
 </div>
-<div class="primary-circle">
+<div class="primary-circle" loading="loading"></div>
+<div ng-if="!loading "class="primary-circle">
 	<h2>{{step.text}}</h2>
 </div>
 <div class="orbit-circle orbit-circle-bottom" ng-click="done(step.num)">
@@ -34,7 +32,9 @@
 				  <input type="text" placeholder="Search" ng-model="moreOptions.locationFilter">
       	</ion-item>
       	<ion-item ng-repeat="item in moreOptions.options | filter:moreOptions.locationFilter" ng-click="selectOption(step.num, item)" class="item-avatar">
-					<img ng-if="item.photoUrl" ng-src="{{item.photoUrl}}">
+					<div class="item-image">
+            <img ng-if="item.photoUrl" ng-src="{{item.photoUrl}}">
+          </div>
       		<h2>{{item.name}}</h2>
           <span class="item-note">{{item.tempDistAway}}</span>
       		<p>{{item.location.address}}</p>
@@ -47,8 +47,10 @@
 				  <input type="text" placeholder="Search" ng-model="moreOptions.peepsFilter">
       	</ion-item>
       	<ion-item ng-repeat="item in moreOptions.options | filter:moreOptions.peepsFilter" ng-click="upload(item.photoUrl)" class="item-avatar">
-          <img ng-if="item.photoUrl" ng-src="{{item.photoUrl}}">
-      		<h2>{{item.name}}</h2>
+          <div class="item-image">
+            <img ng-if="item.photoUrl" ng-src="{{item.photoUrl}}">
+      		</div>
+          <h2>{{item.name}}</h2>
       	</ion-item>
       </ion-list>
 

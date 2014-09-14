@@ -247,12 +247,47 @@ angular.module('SupAppIonic')
 			return deferred.promise;
 		}
 
+		function globalNumberVerified(num) {
+			var d = $q.defer();
+
+			//when a registered user verifies their number, we need to iterate through
+			//all contact data to update
+			globalContactsRef.child(num).on('value', function(snapshot) {
+				
+				// get the global contact
+				if (snapshot) {
+
+					var currentUserId = UserSrvc.getCurrentUserId();
+
+					// if the global contact doesn't have a userId, update it
+					if (!snapshot.userId) {
+						updateGlobalContacts(num, {userId: currentUserId});
+					}
+
+					// now, let's use the global contact to find the user's entry
+					// in each user addressbook. And in each user's addressbook,
+					// add the verified user Id
+					for (var key in snapshot)  {
+						if (key !== 'prototype' && key !== 'length' && key !== 'name' && (!snapshot.hasOwnProperty || snapshot.hasOwnProperty(key))) {
+							updateUserContact(key, num, {userId: currentUserId});
+						}
+					}
+
+					d.resolve('updated users');
+
+				} else {
+					d.reject('error fetching global contact');
+				}
+			});
+		}
+
 		return {
 			getLocalContacts: getLocalContacts,
 			getUserContacts: getUserContacts,
 			updateUserContactsFromLocal: updateUserContactsFromLocal,
 			updateUserContact: updateUserContact,
-			getContactByPhoneNumber: getContactByPhoneNumber
+			getContactByPhoneNumber: getContactByPhoneNumber,
+			globalNumberVerified: globalNumberVerified
 		};
 	}
 );

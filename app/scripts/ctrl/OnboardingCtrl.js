@@ -12,6 +12,7 @@ angular.module('SupAppIonic')
 		];
 
 		$scope.step = steps[0];
+		$scope.confirmCode = {loading: false, sent: false, code: null, error: null};
 
 		$scope.currentUser = {};
 
@@ -25,14 +26,34 @@ angular.module('SupAppIonic')
 			return validObj.isValid;
 		};
 
-		$scope.addTel = function(number) {
+		$scope.sendConfirm = function(number){
 			var validObj = PhoneSrvc.numberValidator(number);
-			userNumber = validObj.number;
-			UserSrvc.saveCurrentUserData({contactId: userNumber}).then(function(){
-				$scope.step = steps[1];
-			}, function(error){
-				console.log(error);
+			var	userNumber = validObj.number;
+			$scope.confirmCode.loading = true;
+			PhoneSrvc.sendNumberConfirm(userNumber).then(function(result){
+				$scope.confirmCode.sent = true;
+				$scope.confirmCode.loading = false;
+				$scope.confirmCode.code = result;
+			}, function(){
+				$scope.confirmCode.loading = false;
+				$scope.confirmCode.error = 'Sorry, there was an error sending your confirmation code. Please try again.';
 			});
+		};
+
+		$scope.addTel = function(code, number) {
+			if (Number(code) === Number($scope.confirmCode.code)) {
+				var validObj = PhoneSrvc.numberValidator(number);
+				userNumber = validObj.number;
+				ContactSrvc.globalNumberVerified(userNumber);
+				UserSrvc.saveCurrentUserData({contactId: userNumber}).then(function(){
+					$scope.step = steps[1];
+				}, function(error){
+					console.log(error);
+				});
+			} else {
+				$scope.confirmCode.error = 'Sorry, that code doesn\'t match what we sent. Please try again.';
+			}
+
 		};
 
 		$scope.addContacts = function() {

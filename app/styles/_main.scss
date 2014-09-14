@@ -14,90 +14,9 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   height: 100%;
 }
 
-.primary-circle{
-  @include create-circle($primaryCircleRadiusPx, true);
-  @include flex-centering();
-  position:absolute;
-  background: rgba(0,0,0,.5);
-  font-weight: 400;
-  color: white;
-  
-  h2{
-    color:white;
-  }
-
-  label {
-    @include set-position(20px, 30px, null, 30px);
-    font-size:13px;
-    font-weight:300;
-  }
-
-  .event-time-ago {
-    position: absolute;
-    bottom: 10px;
-    left: 60px;
-    right: 60px;
-    font-size: 11px;
-  }
-
-  img {
-    @include set-position(0,0,0,0);
-    width:100%;
-    height:100%;
-    z-index: -1;
-    border-radius:50%;
-  }
+.item-avatar > img:first-child {
+  border-radius: 50%;
 }
-
-.orbit-circle{
-  @include create-circle($orbitCircleRadiusPx, true);
-  @include flex-centering();
-  background: rgba(0,0,0,.5);
-  color: white;
-  font-size: 10px;
-  font-weight:300;
-  text-transform: uppercase;
-
-  &.selected {
-    background-color: #ccc;
-  }
-  &.orbit-circle-bottom{
-    $y-translate: #{$primaryCircleRadius + $orbitCircleRadius + $paddingPrimaryOrbit}px;
-    @include transform(translate3d(0, $y-translate, 0) );
-  }
-
-  .orbit-circle-content i.icon {
-    font-size: 25px;
-  }
-
-  img {
-    @include set-position(0,0,0,0);
-    width:100%;
-    height:100%;
-    z-index: -1;
-    border-radius:50%;
-  }
-}
-
-.action-button{
-  @include create-circle($actionBtnRadiusPx, false);
-  @include set-position(null, calc(50% - #{$actionBtnRadiusPx}), 20px, null, fixed);
-  background: grey;
-  color: white;
-  font-size:54px;
-  font-weight:300;
-  
-  &:before{
-    @include set-position(0,0,0,0);
-    @include flex-centering();
-    content:"+";
-    line-height: $actionBtnRadiusPx * 2;
-    margin-top: -2px;
-    margin-right: -2px;
-  }
-}
-
-@include create-orbit-circle-classes();
 
 
 /* Responsive: Portrait tablets and up */

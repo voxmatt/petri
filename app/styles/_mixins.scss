@@ -17,6 +17,19 @@ $allSides: ('top', 'right', 'bottom', 'left');
 
 // ACTUAL MIXINS FOR USE ACROSS STYLES
 
+@mixin icon(){
+	display: inline-block;
+	font-family: "Ionicons";
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	text-rendering: auto;
+	line-height: 1;
+	-webkit-font-smoothing: antialiased;
+}
+
 @mixin set-position($top: null, $right: null, $bottom: null, $left: null, $position: absolute) {
   position: $position;
   $vals: $top, $right, $bottom, $left;
@@ -57,12 +70,9 @@ $allSides: ('top', 'right', 'bottom', 'left');
 		.contains-#{$i}-orbit-circles {
 			@for $j from 1 through 16 {
 				.orbit-circle:nth-child(#{$j}){
-					$startingRotation: 90 - (($i - 1) * 16);
-					@if ($startingRotation < -80){
-						$startingRotation: -80;
-					}
-					$rotation: $startingRotation + ($j * $degreeUnit);
+					$startingRotation: 90 - (($i - 1) * ($degreeUnit/2) );
 
+					$rotation: $startingRotation + (($j - 1) * $degreeUnit);
 					@include transform(rotate( #{$rotation}deg ) translate3d(-$translateX, 0, 0) );
 
 					.orbit-circle-content{

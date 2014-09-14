@@ -2,7 +2,25 @@
 
 angular.module('SupAppIonic')
 
-	.factory('PhoneSrvc', function() {
+	.factory('PhoneSrvc', function($q, $http) {
+
+		function sendNumberConfirm(number) {
+			var d = $q.defer();
+			var code = getRandomInt(1111, 9999);
+			var link = 'https://api.tropo.com/1.0/sessions\?action\=create\&token\=2583fc9bd52af0479a9c0fa3d5e9afd1946c13c8917a1b684cec633c53b9bed8d6a8ca1aec8e688e7edcf48b\&num\=' + number + '\&code\=' + code; // jshint ignore:line
+			
+			//for whatever reason, this post only works from the phone
+			if (window.cordova){
+				$http.post(link, null).success(function() {
+					d.resolve(code);
+				}).error(function(data) {
+					d.reject(data);
+				});
+			} else {
+				d.resolve('1111');
+			}
+			return d.promise;
+		}
 		
 		function numberValidator(number) {
 			if (!number){
@@ -40,7 +58,12 @@ angular.module('SupAppIonic')
 			return { isValid: valid, number: realNum, displayNumber: display, message: errorMessage };
 		}
 
+		function getRandomInt(min, max) {
+		  return Math.floor(Math.random() * (max - min)) + min;
+		}
+
 		return {
+			sendNumberConfirm: sendNumberConfirm,
 			numberValidator: numberValidator,
 			niceNumberFormatter: niceNumberFormatter,
 			numberOutput: numberOutput

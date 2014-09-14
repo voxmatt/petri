@@ -1,5 +1,6 @@
-//BOURBON
+//LIBRARIES
 @import "bourbon/bourbon";
+@import "loader";
 
 //VARS
 @import "vars";
@@ -12,3 +13,4 @@
 //STYLES
 @import "main";
 @import "events";
+@import "onboarding";
