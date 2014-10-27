@@ -1,7 +1,8 @@
 <div class="orbit-circle-container contains-{{step.numOrbitCircles}}-orbit-circles">
 	<div class="orbit-circle" ng-repeat="option in step.options | limitTo:10" ng-click="selectOption(step.num, option)" ng-class="{'selected': option.isSelected}">
     <span class="orbit-circle-content {{option.class}}">
-      {{option.name}}
+      <span ng-if="step.num !== 3">{{option.name}}</span>
+      <span ng-if="step.num === 3">{{option.name.abbName}}</span>
       <img ng-if="option.photoUrl" ng-src="{{option.photoUrl}}">
     </span>
 	</div>
@@ -13,7 +14,7 @@
 <div ng-if="!loading "class="primary-circle">
 	<h2>{{step.text}}</h2>
 </div>
-<div class="orbit-circle orbit-circle-bottom" ng-click="done(step.num)">
+<div class="orbit-circle orbit-circle-bottom" ng-click="done(step.num)" ng-disabled="loading">
 	<span ng-if="step.num == 1">Cancel</span>
 	<span ng-if="step.num != 1">Done</span>
 </div>
@@ -23,7 +24,7 @@
     <ion-header-bar>
     	<button class="button" ng-click="moreOptionsClose()">x</button>
       <h1 class="title">{{moreOptions.title}}</h1>
-      <button class="button" ng-if="step.num == 2" ng-click="done(step.num)">Done</button>
+      <button class="button" ng-if="step.num == 3" ng-click="done(step.num)">Done</button>
     </ion-header-bar>
     <ion-content>
     	<!-- Locations List -->
@@ -46,11 +47,13 @@
       	<ion-item class="item item-input">
 				  <input type="text" placeholder="Search" ng-model="moreOptions.peepsFilter">
       	</ion-item>
-      	<ion-item ng-repeat="item in moreOptions.options | filter:moreOptions.peepsFilter" ng-click="upload(item.photoUrl)" class="item-avatar">
+      	<ion-item ng-repeat="item in moreOptions.options | filter:moreOptions.peepsFilter" ng-click="selectOption(step.num, item)" class="item-avatar">
           <div class="item-image">
-            <img ng-if="item.photoUrl" ng-src="{{item.photoUrl}}">
+            <img ng-if="item.photoUrl && !item.isSelected" ng-src="{{item.photoUrl}}">
+            <i ng-if="item.isSelected" class="icon ion-checkmark"></i>
       		</div>
-          <h2>{{item.name}}</h2>
+          <h2 ng-if="item.name.fullName">{{item.name.fullName}}</h2>
+          <h2 ng-if="!item.name.fullName">{{item.name.firstName}}</h2>
       	</ion-item>
       </ion-list>
 

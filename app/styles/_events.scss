@@ -1,3 +1,7 @@
+.empty-events {
+  padding: 100px 40px;
+}
+
 .primary-circle{
   @include create-circle($primaryCircleRadiusPx, true);
   @include flex-centering();
@@ -94,6 +98,11 @@
     line-height: $actionBtnRadiusPx * 2;
     margin-top: -2px;
     margin-right: -2px;
+  }
+
+  &.delete-action:before{
+    content: "x";
+    font-size: 30px;
   }
 }
 

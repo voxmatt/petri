@@ -66,7 +66,7 @@ angular.module('SupAppIonic')
 
 				ContactSrvc.getUserContacts().then(function(result){
 					allPeeps = result;
-					steps.peeps.options = processPeeps(allPeeps, true, 10);
+					steps.peeps.options = processPeeps(allPeeps, 10);
 					$scope.moreOptions.show = false;
 					steps.peeps.numOrbitCircles = steps.peeps.options.length + 1;
 					$scope.step = steps.peeps;
@@ -111,20 +111,16 @@ angular.module('SupAppIonic')
 			}
 		};
 
-		$scope.addPeep = function(){
-			var numOpts = $scope.step.options.length;
-			if ($scope.step.options[numOpts - 1].name !== '' && $scope.step.options[numOpts - 1].name.length === 1){
-				$scope.step.options.push({name:''});
-			}
-		};
-
 		$scope.done = function(stepNum) {
 			if (stepNum === 1) {
 				$location.url('/events');
 			} else {
+				$scope.loading = true;
 				$scope.moreOptions.show = false;
 				EventSrvc.saveEvent(newEvent).then(function(){
+					$scope.loading = false;
 					$location.url('/events');
+					incrementUsedPeeps(newEvent.peeps);
 				}, function(error) {
 					console.log(error);
 				});
@@ -142,11 +138,7 @@ angular.module('SupAppIonic')
 		function addCurrentUserToEvent() {
 			UserSrvc.getCurrentUser().then(function(user){
 				newEvent.createdBy = user.contactId;
-				var peepObj = {id: user.contactId, name: user.firstName};
-				if (user.lastName) {
-					peepObj.name += ' ' + user.lastName[0] + '.';
-				}
-				newEvent.peeps = [peepObj];
+				newEvent.peeps = [ EventSrvc.getUserObjForEvent(user) ];
 			}, function(error) {
 				console.log(error);
 			});
@@ -176,20 +168,12 @@ angular.module('SupAppIonic')
 			return processedLocations;
 		}
 
-		function processPeeps(peeps, abbreviateLastName, limit) {
+		function processPeeps(peeps, limit) {
 
 			var processedPeeps = [];
 			for (var key in peeps) {
 				if (peeps.hasOwnProperty(key) && !peeps[key].isDupeOf && peeps[key].firstName) {
-					var arrayObj = { id: key, name: peeps[key].firstName };
-					
-					if (peeps[key].lastName && abbreviateLastName) {
-						arrayObj.name += ' ' + peeps[key].lastName[0] + '.';
-					} else if (peeps[key].lastName) {
-						arrayObj.name += ' ' + peeps[key].lastName;
-					}
-					
-					processedPeeps.add(arrayObj);
+					processedPeeps.add(EventSrvc.getUserObjForEvent(peeps[key], key));
 				}
 			}
 
@@ -202,14 +186,32 @@ angular.module('SupAppIonic')
 			});
 
 			if (limit && processedPeeps.length > limit) {
-				return processedPeeps.to(limit - 1);
+				var sortedPeeps = processedPeeps.sortBy(function(peep){
+					return peep.numTimesIncluded;
+				}, true);
+				return sortedPeeps.to(limit - 1);
 			}
 			else {
-				var sortedPeeps = processedPeeps.sortBy(function(peep){
-					return peep.name;
+				var sortedPeepsWithLimit = processedPeeps.sortBy(function(peep){
+					return peep.name.firstName;
 				});
-				return sortedPeeps;
+				return sortedPeepsWithLimit;
 			}
+		}
+
+		function incrementUsedPeeps(peeps) {
+
+			peeps.each(function(peep){
+				if (allPeeps[peep.id]){
+					if (allPeeps[peep.id].numTimesIncluded) {
+						allPeeps[peep.id].numTimesIncluded = Number(allPeeps[peep.id].numTimesIncluded) + 1;
+					} else {
+						allPeeps[peep.id].numTimesIncluded = 1;
+					}
+				}
+			});
+
+			ContactSrvc.updateCurrentUserContacts(allPeeps);
 		}
 	})
 ;

@@ -6,7 +6,8 @@ angular.module('SupAppIonic', [
     'config',
     'ngCordova',
     'ui.router',
-    'firebase'
+    'firebase',
+    'angular-gestures'
   ])
 
   .run(function ($ionicPlatform) {
@@ -30,6 +31,7 @@ angular.module('SupAppIonic', [
 
     $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|ftp|file|blob|content):|data:image\//);
     
+    // as a cheap hack, onboarding handles initial loading right now
     $urlRouterProvider.otherwise('/onboarding');
 
     delete $httpProvider.defaults.headers.common['X-Requested-With'];
