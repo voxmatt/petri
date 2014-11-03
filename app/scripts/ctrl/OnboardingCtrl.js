@@ -2,7 +2,7 @@
 /* global Firebase */
 
 angular.module('SupAppIonic')
-	.controller('OnboardingCtrl', function ($scope, $rootScope, $location, $firebaseSimpleLogin, UserSrvc, ContactSrvc, PhoneSrvc) {
+	.controller('OnboardingCtrl', function ($scope, $rootScope, $location, $firebaseSimpleLogin, $timeout, UserSrvc, ContactSrvc, PhoneSrvc) {
 		
 		var	userNumber;
 		var steps = [
@@ -10,12 +10,14 @@ angular.module('SupAppIonic')
 			{ num: 1, title: 'Verify Phone #' },
 			{ num: 2, title: 'Verify Phone #' },
 			{ num: 3, title: 'Find Friends' },
-			{ num: 4, title: 'Complete Profile' }
+			{ num: 4, title: 'Complete Profile' },
+			{ num: 5 }
 		];
 
 		$scope.step = steps[0];
 		$scope.confirmCode = {loading: false, sent: false, code: null, error: null};
 		$scope.currentUser = {};
+		$scope.startProgressBar = false;
 
 		// LAME WAY TO INIT THE APP HERE
 		UserSrvc.getRegistrationStatus().then(function(status){
@@ -82,23 +84,22 @@ angular.module('SupAppIonic')
 
 		$scope.addContacts = function() {
 
-			$scope.step = steps[0];
-			$scope.step.title = 'Updating Friends';
-			var time = Date.now();
+			$scope.step = steps[5];
+
 			userNumber = userNumber || UserSrvc.currentUser.contactId;
 
+			// This is pretty dangerous, but to optimize the experience right now I'm just
+			// allowing this 20 seconds, continuing, and allowing the upload to proceed in the 
+			// background
+	    $timeout(continueToLastStep,20000);
+	    $timeout(startThing, 200);
+
 			ContactSrvc.updateUserContactsFromLocal(userNumber).then(function(){
-				
 				UserSrvc.getCurrentUser().then(function(user) {
 					$scope.currentUser = user;
 				}, function(error) {
 					console.log(error);
 				});
-				
-				$scope.loading = false;
-				$scope.step = steps[4];
-				$scope.step.title = Date.now() - time;
-				UserSrvc.userOnRegistrationStep('saveName');
 			}, function(error){
 				console.log(error);
 			});
@@ -117,5 +118,14 @@ angular.module('SupAppIonic')
 				console.log(error);
 			});
 		};
+
+		function startThing() {
+			$scope.startProgressBar = true;
+	  }
+
+		function continueToLastStep() {
+			$scope.step = steps[4];
+			UserSrvc.userOnRegistrationStep('saveName');
+		}
 	})
 ;

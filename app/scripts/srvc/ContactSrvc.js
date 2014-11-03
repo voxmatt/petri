@@ -26,7 +26,7 @@ angular.module('SupAppIonic')
 				// if we're native, do the native contact stuff
 				var options = new ContactFindOptions();
 				options.multiple = true;
-				options.desiredFields = ['name','phoneNumbers', 'photos'];
+				options.desiredFields = ['name','phoneNumbers'];
 				var fields = ['*'];
 
 				navigator.contacts.find(fields, function(contacts) {
@@ -37,7 +37,7 @@ angular.module('SupAppIonic')
 
 			} else {
 				// otherwise, return something for debugging
-				deferred.resolve(DebuggingData.addressbook);
+				deferred.resolve(DebuggingData.addressbookNoPhotos);
 			}
 
 			return deferred.promise;
@@ -53,7 +53,7 @@ angular.module('SupAppIonic')
 				// if we're native, do the native contact stuff
 				var options = new ContactFindOptions();
 				options.multiple = true;
-				options.desiredFields = ['name','phoneNumbers', 'photos'];
+				options.desiredFields = ['name','phoneNumbers'];
 				var fields = ['*'];
 				var time = Date.now();
 
@@ -160,10 +160,11 @@ angular.module('SupAppIonic')
 								dupeNumbers: []
 							};
 							
+							// NOT DOING THIS FOR NOW
 							// if the contact has a photo, upload it
-							if (window.cordova && contact.photos && contact.photos[0] && contact.photos[0].value) {
-								PhotoSrvc.saveContactPhoto(validNumber.number, contact.photos[0].value);
-							}
+							// if (window.cordova && contact.photos && contact.photos[0] && contact.photos[0].value) {
+							// 	PhotoSrvc.saveContactPhoto(validNumber.number, contact.photos[0].value);
+							// }
 
 						} else {
 							// add a dupeNumber reference to the primary contact
@@ -180,6 +181,9 @@ angular.module('SupAppIonic')
 						// add each number, dupe or not, add it to the global contacts
 						// do it here because firebase's update only goes down one level before overwriting
 						updateGlobalContacts(validNumber.number, {userPhoneNumber: userId});
+
+						// updating in batch probably overwrites... but it's faster for now
+						//globalContacts[validNumber.number] = {userPhoneNumber: userId};
 					});
 
 					// done processing all the contact's phonenumbers, so we can add the complete
@@ -188,6 +192,7 @@ angular.module('SupAppIonic')
 				});
 				
 				// 9. Add the formatted contacts to the user contacts database
+				updateCurrentUserContactsLocally(userContacts);
 				userContactsRef.child(userPhoneNumber).update(userContacts, function(error) {
 					if (error) {
 						deferred.reject(error);
@@ -195,6 +200,8 @@ angular.module('SupAppIonic')
 						deferred.resolve(userContacts);
 					}
 				});
+
+				//updateGlobalContactsBatch(globalContacts);
 
 			}, function(error){
 				deferred.reject(error);
@@ -280,6 +287,20 @@ angular.module('SupAppIonic')
 			return deferred.promise;
 		}
 
+		function updateGlobalContactsBatch(data) {
+			var deferred = $q.defer();
+
+			globalContactsRef.update(data, function(error) {
+				if (error) {
+					deferred.reject(error);
+				} else {
+					deferred.resolve(data);
+				}
+			});
+
+			return deferred.promise;
+		}
+
 		function globalNumberVerified(num) {
 			var d = $q.defer();
 
@@ -314,6 +335,24 @@ angular.module('SupAppIonic')
 			});
 		}
 
+		function saveUserContactsLocally(contacts) {
+			window.localStorage.userContacts = JSON.stringify(contacts);
+		}
+
+		function getUserContactsLocally() {
+			return JSON.parse(window.localStorage.userContacts || '{}');
+		}
+
+		function updateCurrentUserContactsLocally() {
+			UserSrvc.getCurrentUser().then(function(user){ 
+				userContactsRef.child(user.contactId).on('value', function(snapshot) {
+					if (snapshot) {
+						saveUserContactsLocally(snapshot);
+					}
+				});
+			});
+		}
+
 		return {
 			getLocalContacts: getLocalContacts,
 			uploadAllLocalContacts: uploadAllLocalContacts,
@@ -322,7 +361,11 @@ angular.module('SupAppIonic')
 			updateUserContactsFromLocal: updateUserContactsFromLocal,
 			updateUserContact: updateUserContact,
 			getContactByPhoneNumber: getContactByPhoneNumber,
-			globalNumberVerified: globalNumberVerified
+			globalNumberVerified: globalNumberVerified,
+			updateGlobalContactsBatch: updateGlobalContactsBatch,
+			saveUserContactsLocally: saveUserContactsLocally,
+			getUserContactsLocally: getUserContactsLocally,
+			updateCurrentUserContactsLocally: updateCurrentUserContactsLocally
 		};
 	}
 );

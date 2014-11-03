@@ -64,17 +64,11 @@ angular.module('SupAppIonic')
 
 				$scope.loading = true;
 
-				ContactSrvc.getUserContacts().then(function(result){
-					allPeeps = result;
-					steps.peeps.options = processPeeps(allPeeps, 10);
-					$scope.moreOptions.show = false;
-					steps.peeps.numOrbitCircles = steps.peeps.options.length + 1;
-					$scope.step = steps.peeps;
-				}, function(error){
-					console.log(error);
-				}).finally(function(){
-					$scope.loading = false;
-				});
+				allPeeps = ContactSrvc.getUserContactsLocally();
+				steps.peeps.options = processPeeps(allPeeps, 10);
+				$scope.moreOptions.show = false;
+				steps.peeps.numOrbitCircles = steps.peeps.options.length + 1;
+				$scope.step = steps.peeps;
 
 			} else if (num === 3) {
 

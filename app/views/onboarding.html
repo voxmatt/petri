@@ -1,4 +1,4 @@
-<div ng-if="step.num !== 0" class="bar bar-header">
+<div ng-hide="step.num === 0 || step.num === 5" class="bar bar-header">
   <h1 class="title">{{step.title}}</h1>
 </div>
 
@@ -6,7 +6,9 @@
 	
 	<div ng-switch-when="0" class="onboarding-loader">
 			<div loading="true"></div>
-			<h3>{{step.title}}</h3>
+			<div class="padding text-center">
+				<h3>{{step.title}}</h3>
+			</div>
 	</div>
 
 	<form ng-switch-when="1" name="phoneForm">
@@ -61,7 +63,7 @@
 	</form>
 
 	<form ng-switch-when="3" class="onboarding-form" name="contactsForm">
-		<div class="padding text-center">
+		<div class="padding text-center" >
 			<h4 class="padding">
 				Sup uses the phone numbers in your address book to help you find your friends.
 			</h4>
@@ -106,5 +108,16 @@
 		<button type="submit" class="button button-full button-royal" ng-click="saveName()">Finished!</button>
 
 	</form>
+
+		<div ng-switch-when="5" class="onboarding-loader">
+			<div loading="true"></div>
+			<div class="padding text-center">
+				<h3>Loading Friends</h3>
+				<p>
+					(this will take a few seconds)
+				</p>
+				<div class="progress-bar" ng-class="{'twenty-second':startProgressBar}"></div>
+			</div>
+	</div>
 
 </ion-content>
