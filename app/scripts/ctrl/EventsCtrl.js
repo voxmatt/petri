@@ -2,14 +2,15 @@
 /*global alert*/
 
 angular.module('SupAppIonic')
-  .controller('EventsCtrl', function ($scope, $location, EventSrvc, $ionicSlideBoxDelegate, $cordovaDialogs, ContactSrvc, UserSrvc) {
+  .controller('EventsCtrl', function ($scope, $rootScope, $location, EventSrvc, $ionicSlideBoxDelegate, $cordovaDialogs, ContactSrvc, LocationSrvc) {
 
     var viewingEvent = {};
     var currentUser = {};
     $scope.eventShown = 1;
 
-    UserSrvc.getCurrentUser().then(function(result){
-      currentUser = result;
+    $rootScope.$on('userDefined', function(event, user){
+      currentUser = user;
+      LocationSrvc.cacheFourSquareVenues();
     });
 
     EventSrvc.getEvents().then(function(events) {

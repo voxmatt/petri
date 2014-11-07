@@ -2,7 +2,7 @@
 /* global Firebase */
 
 angular.module('SupAppIonic')
-	.factory('UserSrvc', function($q) {
+	.factory('UserSrvc', function($q, $rootScope) {
 
 		/////////////////////////////////
 		// Manage User in LocalStorage //
@@ -10,15 +10,19 @@ angular.module('SupAppIonic')
 		var currentUser = {};
 		var myRef = new Firebase('https://sup-test.firebaseio.com/users');
 		
-		(function(){
-			currentUser = JSON.parse(window.localStorage.currentUser || '{}');
-			if (currentUser.id && !currentUser.contactId) {
-				getUser(currentUser.id).then(function(user){
-					setLocalStorageUser(user);
-					currentUser = user;
-				});
-			}
-		})();
+		$rootScope.$on('$firebaseSimpleLogin:login', function(event, user) {
+			getUser(user.id).then(function(user){
+				setLocalStorageUser(user);
+				currentUser = user;
+
+				$rootScope.$broadcast('userDefined', user);
+			});
+		});
+
+		$rootScope.$on('$firebaseSimpleLogin:logout', function() {
+			currentUser = null;
+			setLocalStorageUser({});
+		});
 
 		function setLocalStorageUser(user) {
 			window.localStorage.currentUser = JSON.stringify(user);
@@ -108,7 +112,7 @@ angular.module('SupAppIonic')
 			var d = $q.defer();
 
 			saveUserData(currentUser.id, {registered: true}).then(function(){
-
+				updateUserLocally({registered: true});
 				myRef.child(currentUser.id).child('regStep').remove(function(error){
 					if (error) {
 						d.reject(error);
@@ -125,7 +129,18 @@ angular.module('SupAppIonic')
 		}
 
 		function saveCurrentUserData(dataObj) {
+			updateUserLocally(dataObj);
 			return saveUserData(currentUser.id, dataObj);
+		}
+
+		function updateUserLocally(user) {
+			var userData = getUserLocally();
+			Object.merge(userData, user);
+			window.localStorage.user = JSON.stringify(userData);
+		}
+
+		function getUserLocally() {
+			return JSON.parse(window.localStorage.user || '{}');
 		}
 
 		return {
@@ -138,7 +153,9 @@ angular.module('SupAppIonic')
 			getRegistrationStatus: getRegistrationStatus,
 			userOnRegistrationStep: userOnRegistrationStep,
 			userRegistrationComplete: userRegistrationComplete,
-			saveCurrentUserData: saveCurrentUserData
+			saveCurrentUserData: saveCurrentUserData,
+			updateUserLocally: updateUserLocally,
+			getUserLocally: getUserLocally
 		};
 	})
 ;

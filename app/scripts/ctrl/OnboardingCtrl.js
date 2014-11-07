@@ -20,8 +20,10 @@ angular.module('SupAppIonic')
 		$scope.startProgressBar = false;
 
 		// LAME WAY TO INIT THE APP HERE
-		UserSrvc.getRegistrationStatus().then(function(status){
-			if(status === true) {
+		$rootScope.$on('userDefined', function(event, user){
+      var status = user.registered;
+
+      if(status === true) {
 				$location.url('/events');
 			} else if (status === 'addTel') {
 				$scope.step = steps[1];
@@ -32,9 +34,7 @@ angular.module('SupAppIonic')
 			} else {
 				$scope.step = steps[1];
 			}
-		}, function(error){
-			console.log(error);
-		});
+    });
 
 		var dataRef = new Firebase('https://sup-test.firebaseio.com');
     $scope.loginObj = $firebaseSimpleLogin(dataRef);

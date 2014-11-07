@@ -68,4 +68,7 @@ angular.module('SupAppIonic', [
 
     ;
   })
+
+  .run(function(){
+  })
 ;

@@ -344,7 +344,7 @@ angular.module('SupAppIonic')
 		}
 
 		function updateCurrentUserContactsLocally() {
-			UserSrvc.getCurrentUser().then(function(user){ 
+			UserSrvc.getCurrentUser().then(function(user){
 				userContactsRef.child(user.contactId).on('value', function(snapshot) {
 					if (snapshot) {
 						saveUserContactsLocally(snapshot);

@@ -79,14 +79,13 @@ angular.module('SupAppIonic')
 
 		// Upon successful login, set the user object
 		$rootScope.$on('$firebaseSimpleLogin:login', function(event, user) {
-			UserSrvc.setCurrentUserId(user.id);
 			$scope.user = user;
 		});
 
 		// Upon successful logout, reset the user object
 		$rootScope.$on('$firebaseSimpleLogin:logout', function() {
 			$scope.user = null;
-			UserSrvc.setCurrentUserId(null);
+
 			window.cookies.clear(function() {
 				console.log('Cookies cleared!');
 			});
