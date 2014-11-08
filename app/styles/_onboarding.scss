@@ -1,0 +1,29 @@
+.onboarding-loader {
+  padding-top:100px;
+}
+
+
+.progress-bar {
+  width: 100%;
+  position: relative;
+  height: 10px;
+  border-radius: 5px;
+  border: 1px solid black;
+  
+  &:before {
+    content: '';
+    position:absolute;
+    display: inline-block;
+    width: 0%;
+    top:0;
+    left: -1px;
+    bottom:0;
+    border-radius: 5px;
+    background-color: #1e3f57;
+ }
+  
+  &.twenty-second:before {
+    @include transition(width 20s);
+    width:100%;
+  }
+}
