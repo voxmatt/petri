@@ -5,7 +5,7 @@ angular.module('SupAppIonic')
 	.controller('LoginCtrl', function($scope, $rootScope, $location, $firebase, $firebaseSimpleLogin, UserSrvc) {
 
 		// Get a reference to the Firebase
-		var firebaseRef = new Firebase('https://sup-test.firebaseio.com/');
+		var firebaseRef = new Firebase('https://petri.firebaseio.com/');
 
 		// Create a Firebase Simple Login object
 		$scope.auth = $firebaseSimpleLogin(firebaseRef);

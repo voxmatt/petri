@@ -36,7 +36,7 @@ angular.module('SupAppIonic')
 			}
     });
 
-		var dataRef = new Firebase('https://sup-test.firebaseio.com');
+		var dataRef = new Firebase('https://petri.firebaseio.com');
     $scope.loginObj = $firebaseSimpleLogin(dataRef);
 
 		$scope.user = $scope.loginObj.$getCurrentUser();
@@ -95,11 +95,10 @@ angular.module('SupAppIonic')
 	    $timeout(startThing, 200);
 
 			ContactSrvc.updateUserContactsFromLocal(userNumber).then(function(){
-				UserSrvc.getCurrentUser().then(function(user) {
-					$scope.currentUser = user;
-				}, function(error) {
-					console.log(error);
-				});
+				$scope.currentUser = UserSrvc.getUserLocally();
+				console.log('Finished contact processing');
+				$timeout.cancel();
+				continueToLastStep();
 			}, function(error){
 				console.log(error);
 			});

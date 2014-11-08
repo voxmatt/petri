@@ -6,7 +6,7 @@ angular.module('SupAppIonic')
 
 		var eventHalfLife = 12; // in hours - change this here
 
-		var ref = new Firebase('https://sup-test.firebaseio.com/events');
+		var ref = new Firebase('https://petri.firebaseio.com/events');
 
 		function getEvents(){
 			var deferred = $q.defer();

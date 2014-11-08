@@ -8,7 +8,7 @@ angular.module('SupAppIonic')
 		// Manage User in LocalStorage //
 		/////////////////////////////////
 		var currentUser = {};
-		var myRef = new Firebase('https://sup-test.firebaseio.com/users');
+		var myRef = new Firebase('https://petri.firebaseio.com/users');
 		
 		$rootScope.$on('$firebaseSimpleLogin:login', function(event, user) {
 			getUser(user.id).then(function(user){
@@ -49,7 +49,7 @@ angular.module('SupAppIonic')
 
 			myRef.child(userId).on('value', function(snapshot) {
 				if (snapshot) {
-					if (userId === currentUser.contactId) {
+					if (currentUser && userId === currentUser.contactId) {
 						setLocalStorageUser(snapshot.val());
 					}
 					deferred.resolve(snapshot.val());
@@ -63,10 +63,7 @@ angular.module('SupAppIonic')
 
 		function saveUserData(userId, data){
 			var deferred = $q.defer();
-
-			if (userId === currentUser.id) {
-				setLocalStorageUser(data);
-			}
+			setLocalStorageUser(data);
 
 			myRef.child(userId).update(data, function(error){
 				if (error) {
@@ -112,7 +109,7 @@ angular.module('SupAppIonic')
 			var d = $q.defer();
 
 			saveUserData(currentUser.id, {registered: true}).then(function(){
-				updateUserLocally({registered: true});
+				updateUserLocally({registered: true}, currentUser.id);
 				myRef.child(currentUser.id).child('regStep').remove(function(error){
 					if (error) {
 						d.reject(error);
@@ -129,12 +126,14 @@ angular.module('SupAppIonic')
 		}
 
 		function saveCurrentUserData(dataObj) {
+			dataObj.id = currentUser.id;
 			updateUserLocally(dataObj);
 			return saveUserData(currentUser.id, dataObj);
 		}
 
 		function updateUserLocally(user) {
 			var userData = getUserLocally();
+			userData.id = currentUser.id;
 			Object.merge(userData, user);
 			window.localStorage.user = JSON.stringify(userData);
 		}
