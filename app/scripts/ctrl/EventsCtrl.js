@@ -1,5 +1,5 @@
 'use strict';
-/*global alert*/
+/*global $, alert*/
 
 angular.module('SupAppIonic')
   .controller('EventsCtrl', function ($scope, $rootScope, $location, EventSrvc, $ionicSlideBoxDelegate, $cordovaDialogs, ContactSrvc, LocationSrvc) {
@@ -10,7 +10,7 @@ angular.module('SupAppIonic')
 
     $rootScope.$on('userDefined', function(event, user){
       currentUser = user;
-      LocationSrvc.cacheFourSquareVenues();
+      LocationSrvc.cacheFoursquare();
     });
 
     EventSrvc.getEvents().then(function(events) {
@@ -52,10 +52,16 @@ angular.module('SupAppIonic')
     $scope.getTimeAgo = function(strMillis) {
       var date = Date.create(parseInt(strMillis));
       var minutesAgo = date.minutesAgo();
-      if (minutesAgo < 70) {
+      if (minutesAgo < 60) {
         return minutesAgo + ' minutes ago';
-      } else if (minutesAgo < 80) {
+      } else if (minutesAgo < 70) {
         return 'a little over an hour ago';
+      } else if (minutesAgo < 80) {
+        return 'an hour and a half ago';
+      }  else if (minutesAgo < 110) {
+        return 'almost two hours ago';
+      }  else if (minutesAgo < 119) {
+        return 'an hour ago';
       } else {
         return date.hoursAgo() + ' hours ago';
       }
@@ -66,13 +72,15 @@ angular.module('SupAppIonic')
     };
 
     $scope.join = function(event) {
-      console.log(event);
       var x = event.gesture.deltaX;
       var y = event.gesture.deltaY;
+      var parent = $(event.gesture.target).parents('.primary-circle').length;
+      var self = $(event.gesture.target).hasClass('primary-circle');
+      var onImg = $(event.gesture.target).hasClass('event-location-photo');
 
       angular.element('.action-button').css({'-webkit-transform': 'translate(' + x + 'px, ' + y + 'px)'});
 
-      if (y < -200) {
+      if ((parent || self) && !onImg) {
         joinEvent();
       }
     };

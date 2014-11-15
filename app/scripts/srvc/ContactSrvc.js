@@ -16,7 +16,7 @@ angular.module('SupAppIonic')
 
 		var userContactsRef = new Firebase('https://petri.firebaseio.com/userContacts');
 
-		function getLocalContacts() {
+		function getDeviceContacts() {
 			// get's the contacts off the user's device
 
 			var deferred = $q.defer();
@@ -43,33 +43,14 @@ angular.module('SupAppIonic')
 			return deferred.promise;
 		}
 
-		function uploadAllLocalContacts() {
-			var rawContactsRef = new Firebase('https://petri.firebaseio.com/rawContacts');
-
-			var d = $q.defer();
-
-			if (window.cordova){
-
-				// if we're native, do the native contact stuff
-				var options = new ContactFindOptions();
-				options.multiple = true;
-				options.desiredFields = ['name','phoneNumbers'];
-				var fields = ['*'];
-				var time = Date.now();
-
-				navigator.contacts.find(fields, function(contacts) {
-
-					d.resolve(Date.now() - time);
-					rawContactsRef.update(contacts);
-				}, function() {
-				}, options);
-
-				return d.promise;
-			}
-		}
-
-		function getUserContacts(){
+		function getContacts(){
 			var deferred = $q.defer();
+
+			var localContacts = getContactsLocally();
+			if (localContacts) {
+				$q.resolve(localContacts);
+				return deferred.promise;
+			}
 
 			UserSrvc.getCurrentUser().then(function(user){
 				userContactsRef.child(user.contactId).on('value', function(snapshot) {
@@ -87,8 +68,28 @@ angular.module('SupAppIonic')
 			return deferred.promise;
 		}
 
+		function updateContact(data, phoneNumberKey) {
+			var d = $q.defer();
 
-		function updateCurrentUserContacts(data) {
+			UserSrvc.getCurrentUser().then(function(user){
+				userContactsRef.child(user.contactId).child(phoneNumberKey).update(data, function(error){
+					if (error) {
+						d.reject(error);
+					} else {
+						var localContacts = getContactsLocally();
+						localContacts[phoneNumberKey] = data;
+						saveUserContactsLocally(localContacts);
+						d.resolve('Updated Contact');
+					}
+				});
+			}, function (error){
+				d.reject(error);
+			});
+
+			return d.resolve;
+		}
+
+		function bulkUpdateContacts(data) {
 			var d = $q.defer();
 
 			UserSrvc.getCurrentUser().then(function(user){
@@ -96,6 +97,7 @@ angular.module('SupAppIonic')
 					if (error) {
 						d.reject(error);
 					} else {
+						saveUserContactsLocally(data);
 						d.resolve('Updated User Contacts');
 					}
 				});
@@ -106,14 +108,30 @@ angular.module('SupAppIonic')
 			return d.resolve;
 		}
 
+		function updateContactForOtherUser(userContactId, phoneNumberKey, updateObj) {
+			// note that the input here is pretty critical,
+			// this will add/update anything you feed it
+			var deferred = $q.defer();
+
+			userContactsRef.child(userContactId).child(phoneNumberKey).update(updateObj, function(error){
+				if (error) {
+					deferred.reject(error);
+				} else {
+					deferred.resolve(true);
+				}
+			});
+
+			return deferred.promise;
+		}
+
 		// this function does a metric fuck-ton...
-		function updateUserContactsFromLocal(userPhoneNumber){
+		function bulkUpdateContactsFromDevice(userPhoneNumber){
 
 			var deferred = $q.defer();
 			var userId = UserSrvc.getCurrentUserId();
 
 			// 1. Get the contacts off the device
-			getLocalContacts().then(function(contacts) {
+			getDeviceContacts().then(function(contacts) {
 
 				var userContacts = {};
 				var date = Date.now();
@@ -141,7 +159,7 @@ angular.module('SupAppIonic')
 
 						// if this is the user, update the user contacts and skip the rest of the loop
 						if (validNumber.number === userPhoneNumber) {
-							updateGlobalContacts(userPhoneNumber, {userId: userId});
+							addUserIdToGlobalContact(userPhoneNumber, userId);
 							saveContactAsCurrentUser(userPhoneNumber, contact);
 							indexOffset--;
 							return;
@@ -180,7 +198,7 @@ angular.module('SupAppIonic')
 
 						// add each number, dupe or not, add it to the global contacts
 						// do it here because firebase's update only goes down one level before overwriting
-						updateGlobalContacts(validNumber.number, {userId: userPhoneNumber});
+						addUserNumberToGlobalContact(validNumber.number, userPhoneNumber);
 
 						// updating in batch probably overwrites... but it's faster for now
 						//globalContacts[validNumber.number] = {userPhoneNumber: userId};
@@ -192,7 +210,7 @@ angular.module('SupAppIonic')
 				});
 				
 				// 9. Add the formatted contacts to the user contacts database
-				updateCurrentUserContactsLocally(userContacts);
+				updateContactsLocally(userContacts);
 				userContactsRef.child(userPhoneNumber).update(userContacts, function(error) {
 					if (error) {
 						deferred.reject(error);
@@ -210,25 +228,15 @@ angular.module('SupAppIonic')
 			return deferred.promise;
 		}
 
-		function updateUserContact(userContactId, phoneNumberKey, updateObj) {
-			// note that the input here is pretty critical,
-			// this will add/update anything you feed it
-			var deferred = $q.defer();
-
-			userContactsRef.child(userContactId).child(phoneNumberKey).update(updateObj, function(error){
-				if (error) {
-					deferred.reject(error);
-				} else {
-					deferred.resolve(true);
-				}
-			});
-
-			return deferred.promise;
-		}
-
 		function getContactByPhoneNumber(phoneNumber) {
 			var deferred = $q.defer();
 			var numValidatorObj = PhoneSrvc.numberValidator(phoneNumber.value);
+
+			var localContacts = getContactsLocally();
+			if (localContacts && localContacts[phoneNumber]) {
+				$q.resolve(localContacts[phoneNumber]);
+				return deferred.promise;
+			}
 
 			if (numValidatorObj.isValid) {
 				
@@ -273,14 +281,35 @@ angular.module('SupAppIonic')
 
 		var globalContactsRef = new Firebase('https://petri.firebaseio.com/globalContacts');
 
-		function updateGlobalContacts(phoneNumber, data) {
+		function updateGlobalContact(phoneNumber, data) {
 			var deferred = $q.defer();
 
-			globalContactsRef.child(phoneNumber).update(data, function(error) {
+			var updateObj = {};
+			updateObj[phoneNumber] = data;
+
+			globalContactsRef.update(updateObj, function(error) {
 				if (error) {
 					deferred.reject(error);
 				} else {
 					deferred.resolve(data);
+				}
+			});
+
+			return deferred.promise;
+		}
+
+		function addUserIdToGlobalContact(phoneNumber, userId) {
+			return updateGlobalContact(phoneNumber, {userId: userId});
+		}
+
+		function addUserNumberToGlobalContact(globalContactNumber, userNumber) {
+			var deferred = $q.defer();
+
+			globalContactsRef.child(globalContactNumber + '/userContactRefs').push(userNumber, function(error) {
+				if (error) {
+					deferred.reject(error);
+				} else {
+					deferred.resolve('success');
 				}
 			});
 
@@ -306,25 +335,20 @@ angular.module('SupAppIonic')
 
 			//when a registered user verifies their number, we need to iterate through
 			//all contact data to update
-			globalContactsRef.child(num).on('value', function(snapshot) {
+			globalContactsRef.child(num + '/userContactRefs').on('value', function(snapshot) {
 				
 				// get the global contact
 				if (snapshot) {
 
 					var currentUserId = UserSrvc.getCurrentUserId();
 
-					// if the global contact doesn't have a userId, update it
-					if (!snapshot.userId) {
-						updateGlobalContacts(num, {userId: currentUserId});
-					}
-
 					// now, let's use the global contact to find the user's entry
 					// in each user addressbook. And in each user's addressbook,
 					// add the verified user Id
-					for (var key in snapshot)  {
-						if (key !== 'prototype' && key !== 'length' && key !== 'name' && (!snapshot.hasOwnProperty || snapshot.hasOwnProperty(key))) {
-							updateUserContact(key, num, {userId: currentUserId});
-						}
+					if (snapshot.val()) {
+						snapshot.val().each(function(contactId){
+							updateContactForOtherUser(contactId, num, {userId: currentUserId});
+						});
 					}
 
 					d.resolve('updated users');
@@ -339,11 +363,11 @@ angular.module('SupAppIonic')
 			window.localStorage.userContacts = JSON.stringify(contacts);
 		}
 
-		function getUserContactsLocally() {
-			return window.localStorage.userContacts || '{}';
+		function getContactsLocally() {
+			return JSON.parse(window.localStorage.userContacts || null);
 		}
 
-		function updateCurrentUserContactsLocally() {
+		function updateContactsLocally() {
 			UserSrvc.getCurrentUser().then(function(user){
 				userContactsRef.child(user.contactId).on('value', function(snapshot) {
 					if (snapshot) {
@@ -354,18 +378,19 @@ angular.module('SupAppIonic')
 		}
 
 		return {
-			getLocalContacts: getLocalContacts,
-			uploadAllLocalContacts: uploadAllLocalContacts,
-			getUserContacts: getUserContacts,
-			updateCurrentUserContacts: updateCurrentUserContacts,
-			updateUserContactsFromLocal: updateUserContactsFromLocal,
-			updateUserContact: updateUserContact,
+			getDeviceContacts: getDeviceContacts,
+			getContacts: getContacts,
+			updateContact: updateContact,
+			bulkUpdateContacts: bulkUpdateContacts,
+			bulkUpdateContactsFromDevice: bulkUpdateContactsFromDevice,
+			updateContactForOtherUser: updateContactForOtherUser,
 			getContactByPhoneNumber: getContactByPhoneNumber,
 			globalNumberVerified: globalNumberVerified,
+			updateGlobalContact: updateGlobalContact,
 			updateGlobalContactsBatch: updateGlobalContactsBatch,
 			saveUserContactsLocally: saveUserContactsLocally,
-			getUserContactsLocally: getUserContactsLocally,
-			updateCurrentUserContactsLocally: updateCurrentUserContactsLocally
+			getContactsLocally: getContactsLocally,
+			updateContactsLocally: updateContactsLocally
 		};
 	}
 );

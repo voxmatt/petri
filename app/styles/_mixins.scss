@@ -50,7 +50,7 @@ $allSides: ('top', 'right', 'bottom', 'left');
 
 @mixin create-circle($radius: null, $absoluteCenter: false){
 	@if ($absoluteCenter){
-		@include set-position( calc(50% - #{$radius}), calc(50% - #{$radius}));
+		@include set-position( calc(50% - #{$radius}), null, null, calc(50% - #{$radius}));
 	}
 
 	border-radius: 50%;

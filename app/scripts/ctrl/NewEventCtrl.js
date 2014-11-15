@@ -1,7 +1,8 @@
 'use strict';
+/* global $ */
 
 angular.module('SupAppIonic')
-	.controller('NewEventCtrl', function ($scope, $q, EventSrvc, LocationSrvc, $location, ContactSrvc, UserSrvc, PhotoSrvc) {
+	.controller('NewEventCtrl', function ($scope, $q, $timeout, EventSrvc, LocationSrvc, $location, ContactSrvc, UserSrvc, PhotoSrvc) {
 		var newEvent = {};
 		var steps = {
 			type: {
@@ -9,13 +10,13 @@ angular.module('SupAppIonic')
 				text: 'What\'re you thinking?',
 				numOrbitCircles: 7,
 				options: [
-					{name: 'Music', section: null, class:'new-event-music'},
-					{name: 'Movie', section: null, class:'new-event-movie'},
-					{name: 'Drinks', section: 'drinks', class:'new-event-drinks'},
-					{name: 'Food', section: 'food', class:'new-event-food'},
-					{name: 'Dancing', section: null, class:'new-event-dancing'},
-					{name: 'Out doors', section: 'outdoors', class:'new-event-outdoors'},
-					{name: 'Chillin\'', section: null, class:'new-event-chillin'}
+					{name: 'Music', section: 'arts', category: 'music', class:'new-event-music'},
+					{name: 'Movie', section: 'arts', category: 'movie', class:'new-event-movie'},
+					{name: 'Drinks', section: 'drinks', category: 'drinks', class:'new-event-drinks'},
+					{name: 'Food', section: 'food', category: null, class:'new-event-food'},
+					{name: 'Dancing', section: null, category: 'dancing', class:'new-event-dancing'},
+					{name: 'Out doors', section: 'outdoors', category: null, class:'new-event-outdoors'},
+					{name: 'Chillin\'', section: null, category: 'chilling', class:'new-event-chillin'}
 				],
 			},
 			location: {
@@ -42,12 +43,12 @@ angular.module('SupAppIonic')
 
 			if (num === 1){
 				newEvent.type = option.name;
-				var getPhotos = true;
-
 				$scope.loading = true;
 
-				LocationSrvc.getFoursquareVenues(10, option.section, getPhotos, true, true).then(function(result){
-					steps.location.options = processLocations(result.response.groups[0].items, getPhotos);
+				LocationSrvc.getFoursquareVenues(10, option.section, option.category).then(function(result){
+					steps.location.options = result.locations;
+					steps.location.section = option.section;
+					steps.location.category = option.category;
 					$scope.moreOptions.show = false;
 					steps.location.numOrbitCircles = steps.location.options.length + 1;
 					$scope.step = steps.location;
@@ -61,10 +62,7 @@ angular.module('SupAppIonic')
 
 			} else if (num === 2){
 				newEvent.location = option;
-
-				$scope.loading = true;
-
-				allPeeps = ContactSrvc.getUserContactsLocally();
+				allPeeps = ContactSrvc.getContactsLocally();
 				steps.peeps.options = processPeeps(allPeeps, 10);
 				$scope.moreOptions.show = false;
 				steps.peeps.numOrbitCircles = steps.peeps.options.length + 1;
@@ -84,13 +82,11 @@ angular.module('SupAppIonic')
 
 		$scope.showMoreOptions = function(stepNum) {
 			if (stepNum === 2) {
-				var getPhotos = true;
-				LocationSrvc.getFoursquareVenues(100, null, getPhotos, true, true).then(function(result){
-					var locations = processLocations(result.response.groups[0].items, getPhotos);
+				LocationSrvc.getFoursquareVenues(100, $scope.step.section, $scope.step.category).then(function(result){
 					$scope.moreOptions = {
 						show: true,
 						title: 'Where\'s this going down?',
-						options: locations
+						options: result.locations
 					};
 				}, function(error){
 					console.log(error);
@@ -125,8 +121,40 @@ angular.module('SupAppIonic')
 			$scope.moreOptions.show = false;
 		};
 
-		$scope.upload = function(fileUrl) {
-			console.log( ContactSrvc.getBase64Image(fileUrl) );
+		$scope.setInitialPosition = function(event){
+			var elem = $(event.target).hasClass('orbit-circle') && $(event.target) || $(event.target).closest('.orbit-circle');
+			this.xInitial = parseInt(elem.css('left'), 10);
+			this.yInitial = parseInt(elem.css('top'), 10);
+			this.xOffset = this.xInitial - elem.position().left - (elem.width()/2);
+			this.yOffset = this.yInitial - elem.position().top - (elem.height()/2);
+		};
+
+		$scope.draggingOption = function(event) {
+      var elem = $(event.target).hasClass('orbit-circle') && $(event.target) || $(event.target).closest('.orbit-circle');
+      elem.css({'top': event.gesture.center.pageY + this.yOffset, 'left': event.gesture.center.pageX + this.xOffset});
+		};
+
+		$scope.maybeSelectOption = function(event, step, option) {
+			var elem = $(event.target).hasClass('orbit-circle') && $(event.target) || $(event.target).closest('.orbit-circle');
+			var parent = $(event.gesture.target).parents('.primary-circle').length;
+      var self = $(event.gesture.target).hasClass('primary-circle');
+      var onImg = $(event.gesture.target).hasClass('event-location-photo');
+      if ( (parent || self) && !onImg) {
+				elem.animate({width:0, height:0}, 500);
+				$scope.selectOption(step, option);
+      } else {
+				elem.css({'top': this.yInitial, 'left': this.xInitial});
+      }
+		};
+
+		$scope.hint = function(event) {
+			var text = $scope.step.text;
+			var elem = $(event.target).closest('.orbit-circle-content');
+			elem.effect('bounce', 500);
+			$scope.step.text = 'drag into the circle';
+			$timeout(function(){
+				$scope.step.text = text;
+			}, 1000);
 		};
 
 		function addCurrentUserToEvent() {
@@ -136,30 +164,6 @@ angular.module('SupAppIonic')
 			}, function(error) {
 				console.log(error);
 			});
-		}
-
-		function processLocations(locations, getPhotos){
-			var processedLocations = [];
-
-			locations.each(function(loc){
-				var locOption = {
-					name: loc.venue.name.truncate(15, 'right', ''),
-					categories: loc.venue.categories || null,
-					hours: loc.venue.hours.status || null,
-					photoUrl: getPhotos && LocationSrvc.getFoursqaurePhotoUrl(loc.venue, 'small'),
-					price: loc.venue.price || null,
-					rating: loc.venue.rating || null,
-					id: loc.venue.id,
-					location: loc.venue.location || null
-				};
-				if (locOption.location && locOption.location.distance) {
-					var distObj = LocationSrvc.getStaticDistanceAway(locOption.location.distance);
-					locOption.tempDistAway = distObj.display;
-				}
-				processedLocations.push(locOption);
-			});
-
-			return processedLocations;
 		}
 
 		function processPeeps(peeps, limit) {
@@ -205,7 +209,7 @@ angular.module('SupAppIonic')
 				}
 			});
 
-			ContactSrvc.updateCurrentUserContacts(allPeeps);
+			ContactSrvc.bulkUpdateContacts(allPeeps);
 		}
 	})
 ;

@@ -94,7 +94,7 @@ angular.module('SupAppIonic')
 	    $timeout(continueToLastStep,20000);
 	    $timeout(startThing, 200);
 
-			ContactSrvc.updateUserContactsFromLocal(userNumber).then(function(){
+			ContactSrvc.bulkUpdateContactsFromDevice(userNumber).then(function(){
 				$scope.currentUser = UserSrvc.getUserLocally();
 				console.log('Finished contact processing');
 				$timeout.cancel();

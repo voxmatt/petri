@@ -7,12 +7,21 @@ angular.module('SupAppIonic')
 
     function getLatLong() {
       var deferred = $q.defer();
+      var cache = JSON.parse(window.localStorage.lastLocation || null);
 
       UserSrvc.saveCurrentUserData({locationApproved: true});
 
+      // if it's been less than 4 minutes, just return the last location
+      if (cache && (Date.now() - cache.timestamp) < 400000) {
+        deferred.resolve(cache.coords);
+        return deferred.promise;
+      }
+
       navigator.geolocation.getCurrentPosition(function (successResult) {
-        deferred.resolve(successResult);
-        window.localStorage.lastLatLong = JSON.stringify(successResult.coords);
+        //cache the location
+        window.localStorage.lastLocation = JSON.stringify(successResult);
+
+        deferred.resolve(successResult.coords);
       }, function (errorResult) {
         deferred.reject(errorResult);
       });
@@ -20,29 +29,41 @@ angular.module('SupAppIonic')
       return deferred.promise;
     }
 
-    function getFoursquareVenues(num, section, includePhotos, onlyOpen, sortByDistance) {
+    function getFoursquareVenues(num, section, category, onlyOpen) {
       var deferred = $q.defer();
-      var lastLatLong = JSON.parse(window.localStorage.lastLatLong || '{}');
-      var cached = JSON.parse(window.localStorage.foursquare || '{}');
-      var distance = null;
+      var cache = JSON.parse(window.localStorage.foursquare || null);
+      var cachedSection = section || 'all';
 
-      getLatLong().then( function(result) {
+      getLatLong().then( function(coordinates) {
         
-        if (lastLatLong) {
-          distance = getDistanceBtwn(lastLatLong.latitude, lastLatLong.longitude, result.coords.latitude, result.coords.longitude);
-        }
-
-        if (cached && distance && distance < 250) {
-          // if there are cached results and the user has moved less than a 1/4 km, just
-          // return the cached results
-          deferred.resolve(cached);
+        // check to see if we should use the cached items or not
+        // conditions are if the user has moved less than 250 meters 
+        // and it's been less than 10 minutes since last fetch
+        if (isCacheFresh(cache, cachedSection, coordinates, 250, 600000)) {
+          deferred.resolve(getCachedItems(num, cachedSection, category));
           return deferred.promise;
         }
 
-        var url = getVenuesUrl(result.coords, num, section, includePhotos, onlyOpen, sortByDistance);
+        var url = getVenuesUrl(coordinates, num, section, onlyOpen);
         
-        $http.get(url).success(function(result){
-          deferred.resolve(result);
+        $http.get(url).success(function(foursquareItems){
+          coordinates.time = Date.now();
+          var returnObj = {
+            lastFetched: coordinates,
+            locations: processLocations(foursquareItems)
+          };
+
+          // if this is a fetch of everything, might as well cache it
+          // but we don't want a limited set in the cache
+          if (!num || num === 100) {
+            saveCache(foursquareItems, section);
+          }
+
+          if (category) {
+            returnObj.locations = orderByCategory(returnObj.locations, category);
+          }
+
+          deferred.resolve(returnObj);
         }).error(function(result){
           deferred.reject(result);
         });
@@ -54,7 +75,7 @@ angular.module('SupAppIonic')
     }
 
 
-    function cacheFourSquareVenues() {
+    function cacheFoursquare() {
 
       var user = UserSrvc.getUserLocally();
       var d = $q.defer();
@@ -63,18 +84,27 @@ angular.module('SupAppIonic')
         d.reject(false);
         return d.promise;
       }
+
+      var fsAll = getFoursquareVenues(100, null, null, true);
+      var fsArts = getFoursquareVenues(100, 'arts', null, false);
+      var fsDrinks = getFoursquareVenues(100, 'drinks', null, true);
+      var fsFood = getFoursquareVenues(100, 'food', null, true);
+      var fsOutdoors = getFoursquareVenues(100, 'outdoors', null, false);
       
-      getFoursquareVenues(100, null, true, true, true).then(function(result){
-        window.localStorage.foursquare = JSON.stringify(result);
-        d.resolve('success');
-      }, function(error){
-        d.reject(error);
+      $q.all([fsAll, fsArts, fsDrinks, fsFood, fsOutdoors]).then(function(results){
+        saveCache(results[0], 'all');
+        saveCache(results[1], 'arts');
+        saveCache(results[2], 'drinks');
+        saveCache(results[3], 'food');
+        saveCache(results[4], 'outdoors');
+      }).finally(function(){
+        d.resolve('done');
       });
 
       return d.promise;
     }
 
-    function getFoursqaurePhotoUrl(venue, size){
+    function getFoursquarePhotoUrl(venue, size){
       var dimensions = '500x500';
       if (size === 'small'){
         dimensions = '100x100';
@@ -88,31 +118,25 @@ angular.module('SupAppIonic')
       return null;
     }
 
-    function getVenuesUrl(coords, num, section, includePhotos, onlyOpen, sortByDistance){
+    function getVenuesUrl(coords, num, section, onlyOpen){
       var url = FoursquareCnst.credentials.venuesUrl;
       url += coords.latitude + ',' + coords.longitude;
       url += '&client_id=' + FoursquareCnst.credentials.clientId;
       url += '&client_secret=' + FoursquareCnst.credentials.clientSecret;
       url += '&v=' + Date.create().format('{yyyy}{mm}{dd}');
+      url += '&venuePhotos=1';
+      url += '&sortByDistance=1';
 
       if (num) {
         url += '&limit=' + num;
-      }
-
-      if (section) {
-        url += '&section=' + section;
-      }
-
-      if (includePhotos) {
-        url += '&venuePhotos=1';
       }
 
       if (onlyOpen) {
         url += '&openNow=1';
       }
 
-      if (sortByDistance) {
-        url += '&sortByDistance=1';
+      if (section) {
+        url += '&section=' + section;
       }
 
       return url;
@@ -155,12 +179,111 @@ angular.module('SupAppIonic')
       return deg * (Math.PI/180);
     }
 
+    function saveCache(data, section) {
+      var foursquare = JSON.parse(window.localStorage.foursquare || null) || {};
+      foursquare[section] = data;
+      window.localStorage.foursquare = JSON.stringify(foursquare);
+    }
+
+    function getCachedItems(num, section, category) {
+      //note: results are cached with photos, only open venues, and sorted by distance
+      // if we want non-open venues, for example, have to refetch
+      var cachedItems = JSON.parse(window.localStorage.foursquare || null);
+
+      if (cachedItems) {
+
+        if (section) {
+          cachedItems = cachedItems[section];
+        } else {
+          cachedItems = cachedItems.all;
+        }
+
+        if (category) {
+          cachedItems.locations = orderByCategory(cachedItems.locations, category);
+        }
+
+        if (num) {
+          cachedItems.locations = cachedItems.locations.slice(0, num - 1);
+        }
+      }
+
+      return cachedItems;
+    }
+
+    function processLocations(locations){
+      // the actual results are kind of burried on the results
+      // the result object itself has non-useful meta data; the response object has
+      // some useful stuff like suggested bounds, but we have no use for those
+      locations = locations.response.groups[0].items;
+      var processedLocations = [];
+
+      locations.each(function(loc){
+        var locOption = {
+          name: loc.venue.name.truncate(15, 'right', ''),
+          categories: loc.venue.categories || null,
+          contact: loc.venue.contact || null,
+          hours: loc.venue.hours && loc.venue.hours.status || null,
+          photoUrl: getFoursquarePhotoUrl(loc.venue, 'small'),
+          price: loc.venue.price || null,
+          rating: loc.venue.rating || null,
+          id: loc.venue.id,
+          location: loc.venue.location || null,
+          website: loc.venue.url,
+          menu: loc.venue.menu || null
+        };
+
+        if (locOption.location && locOption.location.distance) {
+          var distObj = getStaticDistanceAway(locOption.location.distance);
+          locOption.tempDistAway = distObj.display;
+        }
+        processedLocations.push(locOption);
+      });
+
+      return processedLocations;
+    }
+
+    function orderByCategory(locations, category) {
+      var categories = FoursquareCnst.categoryGroups[category].narrow;
+      var categoryMatches = [];
+      var nonMatches = [];
+
+      locations.each(function(location){
+        var matches = false;
+        location.categories.each(function(category){
+          if (category.id && categories.indexOf(category.id) !== -1) {
+            matches = true;
+          }
+          if (matches) {
+            categoryMatches.push(location);
+          } else {
+            nonMatches.push(location);
+          }
+        });
+      });
+          
+      return categoryMatches.concat(nonMatches);
+    }
+
+    function isCacheFresh(cache, section, currentLatLong, distanceInMeters, timeInMillis) {
+
+      if (!cache || !cache[section] || !cache[section].lastFetched) {
+        return false;
+      }
+
+      cache = cache[section];
+
+      var timeOk = (Date.now() - cache.lastFetched.time) < timeInMillis;
+      var distance = getDistanceBtwn(cache.lastFetched.latitude, cache.lastFetched.longitude, currentLatLong.latitude, currentLatLong.longitude);
+      var distanceOk = distance < distanceInMeters;
+
+      return timeOk && distanceOk;
+    }
+
     return {
       getLatLong: getLatLong,
       getFoursquareVenues: getFoursquareVenues,
-      getFoursqaurePhotoUrl: getFoursqaurePhotoUrl,
       getStaticDistanceAway: getStaticDistanceAway,
-      cacheFourSquareVenues: cacheFourSquareVenues
+      cacheFoursquare: cacheFoursquare
     };
   }
 );
