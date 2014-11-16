@@ -47,8 +47,8 @@ angular.module('SupAppIonic')
 			var deferred = $q.defer();
 
 			var localContacts = getContactsLocally();
-			if (localContacts) {
-				$q.resolve(localContacts);
+			if (localContacts && localContacts.length) {
+				deferred.resolve(localContacts);
 				return deferred.promise;
 			}
 
@@ -56,6 +56,7 @@ angular.module('SupAppIonic')
 				userContactsRef.child(user.contactId).on('value', function(snapshot) {
 					if (snapshot) {
 						var contacts = snapshot.val();
+						saveContactsLocally(contacts);
 						deferred.resolve(contacts);
 					} else {
 						deferred.reject('Could not find user contacts');
@@ -78,7 +79,7 @@ angular.module('SupAppIonic')
 					} else {
 						var localContacts = getContactsLocally();
 						localContacts[phoneNumberKey] = data;
-						saveUserContactsLocally(localContacts);
+						saveContactsLocally(localContacts);
 						d.resolve('Updated Contact');
 					}
 				});
@@ -97,7 +98,7 @@ angular.module('SupAppIonic')
 					if (error) {
 						d.reject(error);
 					} else {
-						saveUserContactsLocally(data);
+						saveContactsLocally(data);
 						d.resolve('Updated User Contacts');
 					}
 				});
@@ -359,7 +360,7 @@ angular.module('SupAppIonic')
 			});
 		}
 
-		function saveUserContactsLocally(contacts) {
+		function saveContactsLocally(contacts) {
 			window.localStorage.userContacts = JSON.stringify(contacts);
 		}
 
@@ -371,7 +372,7 @@ angular.module('SupAppIonic')
 			UserSrvc.getCurrentUser().then(function(user){
 				userContactsRef.child(user.contactId).on('value', function(snapshot) {
 					if (snapshot) {
-						saveUserContactsLocally(snapshot.val());
+						saveContactsLocally(snapshot.val());
 					}
 				});
 			});
@@ -388,7 +389,7 @@ angular.module('SupAppIonic')
 			globalNumberVerified: globalNumberVerified,
 			updateGlobalContact: updateGlobalContact,
 			updateGlobalContactsBatch: updateGlobalContactsBatch,
-			saveUserContactsLocally: saveUserContactsLocally,
+			saveContactsLocally: saveContactsLocally,
 			getContactsLocally: getContactsLocally,
 			updateContactsLocally: updateContactsLocally
 		};

@@ -219,16 +219,16 @@ angular.module('SupAppIonic')
 
       locations.each(function(loc){
         var locOption = {
-          name: loc.venue.name,
+          name: loc.venue.name || null,
           categories: loc.venue.categories || null,
           contact: loc.venue.contact || null,
           hours: loc.venue.hours && loc.venue.hours.status || null,
-          photoUrl: getFoursquarePhotoUrl(loc.venue, 'small'),
+          photoUrl: getFoursquarePhotoUrl(loc.venue),
           price: loc.venue.price || null,
           rating: loc.venue.rating || null,
-          id: loc.venue.id,
+          id: loc.venue.id || null,
           location: loc.venue.location || null,
-          website: loc.venue.url,
+          website: loc.venue.url || null,
           menu: loc.venue.menu || null
         };
 

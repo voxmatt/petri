@@ -47,6 +47,38 @@
     border-radius:50%;
     opacity: .7;
   }
+
+  .peep-drag-targets {
+    > div {
+      @include flex-centering();
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    div:first-child {
+      @include set-position(0,50%,0,0);
+      border-right: 1px dashed gray;
+    }
+
+    div:last-child {
+      @include set-position(0,0,0,50%);
+    }
+  }
+}
+
+.peep-initials {
+  @include flex-centering();
+  width: 56px;
+  height: 56px;
+  color: white;
+  overflow: hidden;
+  border-radius: 50%;
+  font-size: 22px;  
+  line-height:24px;
+  font-weight:100;
+  text-transform: uppercase;
+  text-shadow: 0 0 2px black;
+  border: $circleBorderGreen 1px solid;
 }
 
 .orbit-circle{
@@ -129,6 +161,42 @@
       width: 30px;
       height: initial;
       border-radius: 0;
+    }
+
+    .button-right {
+      @include set-position(0,0,0);
+      height: initial;
+      border-radius: 0;
+    }
+  }
+
+  .item-peep {
+    @include display(flex);
+    @include align-items(center);
+
+    .peep-initials {
+      @include flex-shrink(0);
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+      font-weight: 400;
+    }
+
+    h2 {
+      margin-right: 10px;
+    }
+
+    .button {
+      @include flex-shrink(0);
+      padding: 5px;
+      height: auto;
+      line-height: 14px;
+      font-size: 14px;
+      margin-left: auto;
+    }
+
+    .button:last-child {
+      margin-left: 10px;
     }
   }
 }

@@ -11,6 +11,18 @@ body {
   }
 }
 
+// stupid status bar hacks 
+.platform-ios.platform-cordova:not(.fullscreen) .bar-header:not(.bar-subheader) {
+  height: 40px;
+
+  > * {
+    margin-top: 0;
+  }
+}
+
+.platform-ios.platform-cordova:not(.fullscreen) .bar-header:not(.bar-subheader)>*
+
+
 h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   margin:0;
   color: $colorFontHeader;

@@ -109,14 +109,16 @@ angular.module('SupAppIonic')
 			var userObj = {
 				id: userId,
 				name: {
-					firstName: rawUser.firstName,
-					abbName: rawUser.firstName
+					firstName: rawUser.firstName || '',
+					abbName: rawUser.firstName || '',
+					initials: rawUser.firstName[0] || ''
 				}
 			};
 					
 			if (rawUser.lastName) {
 				userObj.name.abbName += ' ' + rawUser.lastName[0] + '.';
 				userObj.name.fullName = rawUser.firstName + ' ' + rawUser.lastName;
+				userObj.name.initials += rawUser.lastName[0];
 			}
 
 			userObj.numTimesIncluded = rawUser.numTimesIncluded || 0;

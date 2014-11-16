@@ -3,44 +3,56 @@
 
 angular.module('SupAppIonic')
 	.controller('NewEventCtrl', function ($scope, $q, $timeout, EventSrvc, LocationSrvc, $location, ContactSrvc, UserSrvc, PhotoSrvc) {
-		var newEvent = {};
-		var draggingElm = {};
-		var steps = {
-			type: {
-				num: 1,
-				text: 'What\'s on tap?',
-				numOrbitCircles: 7,
-				options: [
-					{name: 'Music', section: 'arts', category: 'music', class:'new-event-music'},
-					{name: 'Movie', section: 'arts', category: 'movie', class:'new-event-movie'},
-					{name: 'Drinks', section: 'drinks', category: 'drinks', class:'new-event-drinks'},
-					{name: 'Food', section: 'food', category: null, class:'new-event-food'},
-					{name: 'Dancin\'', section: null, category: 'dancing', class:'new-event-dancing'},
-					{name: 'Out doors', section: 'outdoors', category: null, class:'new-event-outdoors'},
-					{name: 'Chillin\'', section: null, category: 'chilling', class:'new-event-chillin'}
-				],
-			},
-			location: {
-				num: 2,
-				text: 'Where to?',
-				options: []
-			},
-			peeps: {
-				num: 3,
-				text: 'With who?'
-			},
-			saving: {
-				text: 'Saving...',
-				options: []
-			}
-		};
+		
+		var newEvent, draggingElm, hintTimeout, currentText, allPeeps, steps, nextPeepIndex;
 
-		$scope.loading = false;
-		$scope.moreOptions = { show: 'false', title: '', optons: []};
-		var allPeeps = {};
+		(function init() {
+			newEvent = {};
+			draggingElm = {};
+			hintTimeout = null;
+			currentText = '';
+			allPeeps = {};
+			steps = {
+				type: {
+					key: 'type',
+					num: 1,
+					text: 'What\'s on tap?',
+					numOrbitCircles: 7,
+					options: [
+						{name: 'Music', section: 'arts', category: 'music', class:'new-event-music'},
+						{name: 'Movie', section: 'arts', category: 'movie', class:'new-event-movie'},
+						{name: 'Drinks', section: 'drinks', category: 'drinks', class:'new-event-drinks'},
+						{name: 'Food', section: 'food', category: null, class:'new-event-food'},
+						{name: 'Dancin\'', section: null, category: 'dancing', class:'new-event-dancing'},
+						{name: 'Out doors', section: 'outdoors', category: null, class:'new-event-outdoors'},
+						{name: 'Chillin\'', section: null, category: 'chilling', class:'new-event-chillin'}
+					],
+				},
+				location: {
+					key: 'location',
+					num: 2,
+					text: 'Where to?',
+					options: []
+				},
+				peeps: {
+					key: 'peeps',
+					num: 3,
+					text: 'With who?'
+				},
+				saving: {
+					key: 'saving',
+					text: 'Saving...',
+					options: []
+				}
+			};
 
-		$scope.step = steps.type;
-		$scope.selectOption = function(num, option){
+			$scope.loading = false;
+			$scope.moreOptions = { show: 'false', title: '', optons: []};
+			$scope.peepDragging = {status: false};
+			$scope.step = steps.type;
+		})();
+
+		$scope.selectOption = function(num, option, isInvite){
 
 			if (num === 1){
 				newEvent.type = option.name;
@@ -62,28 +74,50 @@ angular.module('SupAppIonic')
 				addCurrentUserToEvent();
 
 			} else if (num === 2){
+				$scope.loading = true;
 				newEvent.location = option;
-				allPeeps = ContactSrvc.getContactsLocally();
-				steps.peeps.options = processPeeps(allPeeps, 10);
-				$scope.moreOptions.show = false;
-				steps.peeps.numOrbitCircles = steps.peeps.options.length + 1;
-				$scope.step = steps.peeps;
 
+				ContactSrvc.getContacts().then(function(contacts){
+					allPeeps = processPeeps(contacts);
+					steps.peeps.options = allPeeps.slice(0,9);
+					nextPeepIndex = 10;
+					$scope.moreOptions.show = false;
+					steps.peeps.numOrbitCircles = steps.peeps.options.length + 1;
+					$scope.step = steps.peeps;
+				}, function(){
+					console.log('failed to get contacts');
+				}).finally(function(){
+					$scope.loading = false;
+				});
+				
 			} else if (num === 3) {
 
-				if (option.isSelected) {
+				if (option.isSelected && !isInvite) {
 					option.isSelected = false;
 					newEvent.peeps.remove(option);
+				} else if (option.isInvited && isInvite) {
+					option.isInvited = false;
+					newEvent.peepsInvited.remove(option);
+				} else if (isInvite) {
+					option.isInvited = true;
+					option.inviteTime = Date.now();
+					newEvent.peepsInvited.add(option);
+					swapOutPeep(option);
 				} else {
 					option.isSelected = true;
+					option.joinTime = Date.now();
 					newEvent.peeps.add(option);
+					swapOutPeep(option);
 				}
 			}
 		};
 
 		$scope.showMoreOptions = function(stepNum) {
+			$scope.loading = true;
+
 			if (stepNum === 2) {
 				LocationSrvc.getFoursquareVenues(100, $scope.step.section, $scope.step.category).then(function(result){
+					$scope.loading = false;
 					$scope.moreOptions = {
 						show: true,
 						title: 'Where\'s this going down?',
@@ -94,36 +128,46 @@ angular.module('SupAppIonic')
 				});
 
 			} else if (stepNum === 3) {
+				$scope.loading = false;
 				$scope.moreOptions = {
 					show: true,
 					title: 'Who\'re you with?',
-					options: processPeeps(allPeeps)
+					options: allPeeps
 				};
 			}
 		};
 
-		$scope.done = function(stepNum) {
-			if (stepNum === 1) {
+		$scope.cancel = function() {
+			$location.url('/events');
+		};
+
+		$scope.done = function() {
+			$scope.loading = true;
+			$scope.moreOptions.show = false;
+			EventSrvc.saveEvent(newEvent).then(function(){
+				$scope.loading = false;
 				$location.url('/events');
-			} else {
-				$scope.loading = true;
-				$scope.moreOptions.show = false;
-				EventSrvc.saveEvent(newEvent).then(function(){
-					$scope.loading = false;
-					$location.url('/events');
-					incrementUsedPeeps(newEvent.peeps);
-				}, function(error) {
-					console.log(error);
-				});
-			}
+				incrementUsedPeeps(newEvent.peeps);
+			}, function(error) {
+				console.log(error);
+			});
 		};
 
 		$scope.moreOptionsClose = function() {
 			$scope.moreOptions.show = false;
 		};
 
-		$scope.setInitialPosition = function(event){
+		$scope.dragStart = function(event){
 			draggingElm = getOrbitCircle(event);
+			if (hintTimeout) {
+				$timeout.cancel(hintTimeout);
+				$scope.step.text = currentText;
+			}
+
+			if ($scope.step.num === 3) {
+				$scope.peepDragging.status = true;
+				$scope.peepDragging.name = this.option.name.firstName;
+			}
 		};
 
 		$scope.draggingOption = function(event) {
@@ -134,24 +178,37 @@ angular.module('SupAppIonic')
 		$scope.maybeSelectOption = function(event, step, option) {
 			var xPos = event.gesture.center.pageX;
 			var yPos = event.gesture.center.pageY;
-      if ( checkWithinPrimaryCircle(xPos, yPos) ) {
+			
+			if ($scope.step.num === 3 && checkWithinPrimaryCircle(xPos, yPos, 'left')) {
+				$(draggingElm).animate({width:0, height:0}, 500);
+				$scope.selectOption(step, option);
+			} else if ($scope.step.num === 3 && checkWithinPrimaryCircle(xPos, yPos, 'right')) {
+				$(draggingElm).animate({width:0, height:0}, 500);
+				$scope.selectOption(step, option, true);
+			} else if ( checkWithinPrimaryCircle(xPos, yPos) ) {
 				$(draggingElm).animate({width:0, height:0}, 500);
 				$scope.selectOption(step, option);
       } else {
 				var translation = 'translate3d(0,0,0)';
-				$(draggingElm).css({'transform': translation, '-webkit-transform': translation});
+				$('.orbit-circle-content').css({'transform': translation, '-webkit-transform': translation});
       }
+      
       // IMPORTANT!!!!!!!!!!!!!
       draggingElm = {};
+      $scope.peepDragging = {status: false};
 		};
 
 		$scope.hint = function(event) {
-			var text = $scope.step.text;
+			var hintText = 'drag into the circle';
 			var elem = $(event.target).closest('.orbit-circle-content');
+			currentText = $scope.step.text !== hintText && $scope.step.text || currentText;
 			elem.effect('bounce', 500);
 			$scope.step.text = 'drag into the circle';
-			$timeout(function(){
-				$scope.step.text = text;
+			if (hintTimeout) {
+				$timeout.cancel(hintTimeout);
+			}
+			hintTimeout = $timeout(function(){
+				$scope.step.text = currentText;
 			}, 1000);
 		};
 
@@ -167,12 +224,13 @@ angular.module('SupAppIonic')
 			UserSrvc.getCurrentUser().then(function(user){
 				newEvent.createdBy = user.contactId;
 				newEvent.peeps = [ EventSrvc.getUserObjForEvent(user) ];
+				newEvent.peepsInvited = [];
 			}, function(error) {
 				console.log(error);
 			});
 		}
 
-		function processPeeps(peeps, limit) {
+		function processPeeps(peeps) {
 
 			var processedPeeps = [];
 			for (var key in peeps) {
@@ -189,18 +247,15 @@ angular.module('SupAppIonic')
 				});
 			});
 
-			if (limit && processedPeeps.length > limit) {
-				var sortedPeeps = processedPeeps.sortBy(function(peep){
-					return peep.numTimesIncluded;
-				}, true);
-				return sortedPeeps.to(limit - 1);
-			}
-			else {
-				var sortedPeepsWithLimit = processedPeeps.sortBy(function(peep){
+			var sortedPeeps = processedPeeps.sortBy(function(peep){
+				if (peep.userId) {
+					return true;
+				} else {
 					return peep.name.firstName;
-				});
-				return sortedPeepsWithLimit;
-			}
+				}
+			});
+
+			return sortedPeeps;
 		}
 
 		function incrementUsedPeeps(peeps) {
@@ -212,25 +267,38 @@ angular.module('SupAppIonic')
 					} else {
 						allPeeps[peep.id].numTimesIncluded = 1;
 					}
+
+					ContactSrvc.updateContact(peep, peep.id);
 				}
 			});
-
-			ContactSrvc.bulkUpdateContacts(allPeeps);
 		}
 
 		function getOrbitCircle(event) {
-			var orbitElem = event.target;
+			// note that this fails if we're traversing down the dom tree and there are
+			// multiple children on a node; shouldn't be a problem given our structure on the
+			// circles, but worth noting
+			var parentOrbitElem = event.target;
+			var childOrbitElem = event.target;
+			var orbitElem = null;
 			var i = 0;
 
-			while (!$(orbitElem).hasClass('orbit-circle-content') && i < 4) {
-				orbitElem = orbitElem.parentElement;
+			while (!orbitElem && i < 4) {
+				if ($(parentOrbitElem).hasClass('orbit-circle-content')) {
+					orbitElem = parentOrbitElem;
+				} else if ($(childOrbitElem).hasClass('orbit-circle-content')) {
+					orbitElem = childOrbitElem;
+				} else {
+					parentOrbitElem = parentOrbitElem.parentElement;
+					childOrbitElem = childOrbitElem.children[0];
+				}
+				
 				i++;
 			}
 
 			return orbitElem;
 		}
 
-		function checkWithinPrimaryCircle(xPos, yPos) {
+		function checkWithinPrimaryCircle(xPos, yPos, side) {
 			// this crappy, crappy function is needed due to bullshit in mobile safari
 			var circleDimensions = document.getElementsByClassName('primary-circle')[0].getBoundingClientRect();
 			var radius = circleDimensions.width / 2;
@@ -243,10 +311,22 @@ angular.module('SupAppIonic')
 
 			// circle is defined by x^2 + y^2 = r^2
 			if ( (xPlot * xPlot) + (yPlot * yPlot) <= (radius * radius) ) {
-				return true;
+				if (side) {
+					return (side === 'left' && xPlot < 0) || (side === 'right' && xPlot >= 0);
+				} else {
+					return true;
+				}
 			} else {
 				return false;
 			}
+		}
+
+		function swapOutPeep(peep) {
+			// warning: can only be used when on the peeps step
+			var peepIndex = allPeeps.indexOf(peep);
+			$scope.step.options.remove(peep);
+			$scope.step.options.add(allPeeps[nextPeepIndex], peepIndex);
+			nextPeepIndex++;
 		}
 	})
 ;
