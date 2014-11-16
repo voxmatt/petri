@@ -180,7 +180,7 @@ module.exports = function (grunt) {
         sassDir: '<%= yeoman.app %>/<%= yeoman.styles %>',
         cssDir: '.tmp/<%= yeoman.styles %>',
         generatedImagesDir: '.tmp/img/generated',
-        imagesDir: '<%= yeoman.app %>/img',
+        imagesDir: '<%= yeoman.app %>/images',
         javascriptsDir: '<%= yeoman.app %>/<%= yeoman.scripts %>',
         fontsDir: '<%= yeoman.app %>/<%= yeoman.styles %>/fonts',
         importPath: '<%= yeoman.app %>/bower_components',

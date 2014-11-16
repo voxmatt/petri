@@ -32,7 +32,7 @@ h1 {
   &:before {
     @include set-position(0,0,0,0);
     content: '';
-    background: url('/images/blackground1.jpg') no-repeat;
+    background: url('../images/blackground1.jpg') no-repeat;
     background-size: 100%;
     background-position: center;
     opacity: .7;
