@@ -1,15 +1,17 @@
 'use strict';
-/*global $, alert*/
+/*global $, alert, Firebase */
 
 angular.module('SupAppIonic')
-  .controller('EventsCtrl', function ($scope, $rootScope, $location, EventSrvc, $ionicSlideBoxDelegate, $cordovaDialogs, ContactSrvc, LocationSrvc) {
+  .controller('EventsCtrl', function ($scope, $rootScope, $location, $firebaseSimpleLogin, EventSrvc, $ionicSlideBoxDelegate, $cordovaDialogs, ContactSrvc, LocationSrvc) {
 
     var viewingEvent = {};
     var currentUser = {};
     $scope.eventShown = 1;
+    $scope.activeSlide = 1;
 
     $rootScope.$on('userDefined', function(event, user){
       currentUser = user;
+      $scope.user = currentUser;
       LocationSrvc.cacheFoursquare();
     });
 
@@ -115,6 +117,11 @@ angular.module('SupAppIonic')
       } else {
         viewingEvent = null;
       }
+    };
+
+    $scope.logout = function() {
+      var firebaseRef = new Firebase('https://petri.firebaseio.com/');
+      $firebaseSimpleLogin(firebaseRef).$logout();
     };
 
     function joinEvent() {

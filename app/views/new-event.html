@@ -6,11 +6,13 @@
   hm-dragend="maybeSelectOption($event, step.num, option)"
   hm-tap="hint($event)"
   ng-class="{'selected': option.isSelected}">
-    <span class="orbit-circle-content {{option.class}}">
-      <span ng-if="step.num !== 3">{{option.name}}</span>
-      <span ng-if="step.num === 3">{{option.name.abbName}}</span>
-      <img ng-if="option.photoUrl" ng-src="{{option.photoUrl}}">
-    </span>
+    <div class="orbit-circle-rotate-correction">
+      <div class="orbit-circle-content {{option.class}}">
+        <span ng-if="step.num !== 3">{{option.name}}</span>
+        <span ng-if="step.num === 3">{{option.name.abbName}}</span>
+        <img ng-if="option.photoUrl" ng-src="{{option.photoUrl}}">
+      </div>
+    </div>
 	</div>
 	<div ng-if="step.num != 1" ng-click="showMoreOptions(step.num)" class="orbit-circle">
     <span class="orbit-circle-content"><i class="icon ion-ios7-search-strong"></i></span> 

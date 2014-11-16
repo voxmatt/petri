@@ -1,6 +1,16 @@
-$colorBackground: #000000;
-$colorBackgroundInput: rgba(255,255,255, .2);
+$colorBackground: #000;
+$colorBackgroundInput: #505050;
 $colorBorder: #222;
+
+$colorButton: #2B5C5C;
+$colorButtonBorder: #1F4949;
+
+$colorFont: #999;
+$colorFontHeader: $colorFont;
+
+
+$borderRadius: 3px;
+
 
 $primaryCircleRadiusPx: 95px;
 $primaryCircleRadius: 95;
@@ -8,6 +18,8 @@ $orbitCircleRadiusPx: 28px;
 $orbitCircleRadius: 28;
 $paddingPrimaryOrbit: 5;
 $paddingOrbitOrbit: 3;
+
+$circleBorderGreen: #2BFEC3;
 
 $actionBtnRadiusPx: 28px;
 

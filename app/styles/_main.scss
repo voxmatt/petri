@@ -1,17 +1,47 @@
 body {
   position: absolute;
-  font-family: 'Open Sans', sans-serif;
-  height:100%;
+  top: 20px;
+  font-family: 'Avenir Next', sans-serif;
+  height: calc(100% - 20px);
+  background-color: $colorBackground;
+  color: $colorFont;
+
+  p {
+    color: $colorFont;
+  }
 }
 
 h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
-  font-family: 'Open Sans', sans-serif;
+  margin:0;
+  color: $colorFontHeader;
+  font-family: 'Avenir Next', sans-serif;
+}
+
+h1 {
+  font-weight: 600;
 }
 
 //stupid height hacks that I shouldn't have to do...
 .main-view,
 .slider{
   height: 100%;
+}
+
+.event-slider {
+
+  &:before {
+    @include set-position(0,0,0,0);
+    content: '';
+    background: url('/images/blackground1.jpg') no-repeat;
+    background-size: 100%;
+    background-position: center;
+    opacity: .7;
+  }
+  
+}
+
+.item {
+  background: none;
 }
 
 .item-avatar > img:first-child {
@@ -39,5 +69,15 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   /* Remove the bottom border on the jumbotron for visual effect */
   .jumbotron {
     border-bottom: 0;
+  }
+}
+
+.button.button-petri {
+  border-color: $colorButtonBorder;
+  background-color: $colorButton;
+  color: white;
+
+  &.button-outline {
+    background: transparent;
   }
 }

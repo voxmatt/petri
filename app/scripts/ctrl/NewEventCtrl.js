@@ -4,6 +4,7 @@
 angular.module('SupAppIonic')
 	.controller('NewEventCtrl', function ($scope, $q, $timeout, EventSrvc, LocationSrvc, $location, ContactSrvc, UserSrvc, PhotoSrvc) {
 		var newEvent = {};
+		var draggingElm = {};
 		var steps = {
 			type: {
 				num: 1,
@@ -122,29 +123,26 @@ angular.module('SupAppIonic')
 		};
 
 		$scope.setInitialPosition = function(event){
-			var elem = $(event.target).hasClass('orbit-circle') && $(event.target) || $(event.target).closest('.orbit-circle');
-			this.xInitial = parseInt(elem.css('left'), 10);
-			this.yInitial = parseInt(elem.css('top'), 10);
-			this.xOffset = this.xInitial - elem.position().left - (elem.width()/2);
-			this.yOffset = this.yInitial - elem.position().top - (elem.height()/2);
+			draggingElm = getOrbitCircle(event);
 		};
 
 		$scope.draggingOption = function(event) {
-      var elem = $(event.target).hasClass('orbit-circle') && $(event.target) || $(event.target).closest('.orbit-circle');
-      elem.css({'top': event.gesture.center.pageY + this.yOffset, 'left': event.gesture.center.pageX + this.xOffset});
+			var translation = 'translate3d(' + event.gesture.deltaX + 'px,' + event.gesture.deltaY + 'px,0)';
+			$(draggingElm).css({'transform': translation, '-webkit-transform': translation});
 		};
 
 		$scope.maybeSelectOption = function(event, step, option) {
-			var elem = $(event.target).hasClass('orbit-circle') && $(event.target) || $(event.target).closest('.orbit-circle');
-			var parent = $(event.gesture.target).parents('.primary-circle').length;
-      var self = $(event.gesture.target).hasClass('primary-circle');
-      var onImg = $(event.gesture.target).hasClass('event-location-photo');
-      if ( (parent || self) && !onImg) {
-				elem.animate({width:0, height:0}, 500);
+			var xPos = event.gesture.center.pageX;
+			var yPos = event.gesture.center.pageY;
+      if ( checkWithinPrimaryCircle(xPos, yPos) ) {
+				$(draggingElm).animate({width:0, height:0}, 500);
 				$scope.selectOption(step, option);
       } else {
-				elem.css({'top': this.yInitial, 'left': this.xInitial});
+				var translation = 'translate3d(0,0,0)';
+				$(draggingElm).css({'transform': translation, '-webkit-transform': translation});
       }
+      // IMPORTANT!!!!!!!!!!!!!
+      draggingElm = {};
 		};
 
 		$scope.hint = function(event) {
@@ -197,6 +195,10 @@ angular.module('SupAppIonic')
 			}
 		}
 
+		$scope.log = function(event) {
+			console.log(event);
+		};
+
 		function incrementUsedPeeps(peeps) {
 
 			peeps.each(function(peep){
@@ -210,6 +212,37 @@ angular.module('SupAppIonic')
 			});
 
 			ContactSrvc.bulkUpdateContacts(allPeeps);
+		}
+
+		function getOrbitCircle(event) {
+			var orbitElem = event.target;
+			var i = 0;
+
+			while (!$(orbitElem).hasClass('orbit-circle-content') && i < 4) {
+				orbitElem = orbitElem.parentElement;
+				i++;
+			}
+
+			return orbitElem;
+		}
+
+		function checkWithinPrimaryCircle(xPos, yPos) {
+			// this crappy, crappy function is needed due to bullshit in mobile safari
+			var circleDimensions = document.getElementsByClassName('primary-circle')[0].getBoundingClientRect();
+			var radius = circleDimensions.width / 2;
+
+			// next we have to get the center of the circle on the page to calibrate our x,y positioning
+			var circleCenterX = circleDimensions.left + radius;
+			var circleCenterY = circleDimensions.top + radius;
+			var xPlot = xPos - circleCenterX;
+			var yPlot = yPos - circleCenterY;
+
+			// circle is defined by x^2 + y^2 = r^2
+			if ( (xPlot * xPlot) + (yPlot * yPlot) <= (radius * radius) ) {
+				return true;
+			} else {
+				return false;
+			}
 		}
 	})
 ;

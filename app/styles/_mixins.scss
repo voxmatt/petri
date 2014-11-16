@@ -75,7 +75,7 @@ $allSides: ('top', 'right', 'bottom', 'left');
 					$rotation: $startingRotation + (($j - 1) * $degreeUnit);
 					@include transform(rotate( #{$rotation}deg ) translate3d(-$translateX, 0, 0) );
 
-					.orbit-circle-content{
+					.orbit-circle-rotate-correction{
 						//have to do this because SCSS interpolation doesn't handle negatives well
 						@if ($rotation < 0){
 							$rotation: $rotation * -1;

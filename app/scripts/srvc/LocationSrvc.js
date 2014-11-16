@@ -219,7 +219,7 @@ angular.module('SupAppIonic')
 
       locations.each(function(loc){
         var locOption = {
-          name: loc.venue.name.truncate(15, 'right', ''),
+          name: loc.venue.name,
           categories: loc.venue.categories || null,
           contact: loc.venue.contact || null,
           hours: loc.venue.hours && loc.venue.hours.status || null,

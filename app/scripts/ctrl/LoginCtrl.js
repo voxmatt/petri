@@ -85,6 +85,7 @@ angular.module('SupAppIonic')
 		// Upon successful logout, reset the user object
 		$rootScope.$on('$firebaseSimpleLogin:logout', function() {
 			$scope.user = null;
+			$location.path('/login');
 
 			window.cookies.clear(function() {
 				console.log('Cookies cleared!');

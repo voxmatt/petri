@@ -1,8 +1,8 @@
-<ion-content>
+<ion-content scroll="false" class="login-content">
   <div class="item item-text-wrap text-center padding">
-		<h1 class="padding">sup</h1>
+		<h1 class="padding">PETRI</h1>
 		<div class="padding">
-			<div ng-if="!passwordReset.show">beware, this is an alpha prototype VER 13</div>
+			<div ng-if="!passwordReset.show">beware, this is an alpha prototype</div>
 			<div ng-if="loginError" class="assertive padding">
 		  	{{loginError}}
 		  </div>
@@ -14,7 +14,8 @@
 		</div>
 	</div>
 
-  <form name="loginForm" class="list" ng-hide="user" >
+  <form name="loginForm" class="list login-form" ng-hide="user" >
+		
 	  <label class="item item-input" ng-class="{'input-error': !loginForm.email.$valid}">
 	    <span class="input-label">Email</span>
 	    <input ng-model="login.email" type="email" name="email" required>
@@ -24,12 +25,14 @@
 	    <input ng-model="login.password" type="password" name="password" required>
 	  </label>
 		
-		<button type="submit" ng-disabled="!loginForm.$valid" class="button button-full button-royal" ng-click="createUser()">Sign Up</button>
+		<button type="submit" ng-disabled="!loginForm.$valid" class="button button-block button-petri" ng-click="createUser()">Register</button>
+		
+		<div class="hrule"></div>
 
-	  <button type="submit" ng-disabled="!loginForm.$valid" class="button button-outline button-full button-royal" ng-click="login()">Log In</button>
+	  <button type="submit" ng-disabled="!loginForm.$valid" class="button button-outline button-block button-petri" ng-click="login()">Login</button>
 
 	</form>
 
-	<button type="submit" ng-show="user" class="button button-outline button-full button-assertive" ng-click="logout()">Log Out</button>
+	<button type="submit" ng-show="user" class="button button-outline button-block button-petri" ng-click="logout()">Log Out</button>
 
 </ion-content>

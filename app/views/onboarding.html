@@ -1,8 +1,4 @@
-<div ng-hide="step.num === 0 || step.num === 5" class="bar bar-header">
-  <h1 class="title">{{step.title}}</h1>
-</div>
-
-<ion-content ng-switch="step.num" scroll="false" class="has-header list">
+<ion-content ng-switch="step.num" scroll="false" class="list ">
 	
 	<div ng-switch-when="0" class="onboarding-loader">
 			<div loading="true"></div>
@@ -11,15 +7,13 @@
 			</div>
 	</div>
 
-	<form ng-switch-when="1" name="phoneForm">
-		<div class="padding text-center">
-			<h4 class="padding">
+	<form ng-switch-when="1" name="phoneForm" class="login-form">
+			<h4 class="padding talign-center">
 				Please verify your phone number so that we know you're a real person!
 			</h4>
-		  <p>
+		  <p class="talign-center padding margin-bottom-big">
 				Your phone number is <em>never</em> shared with anyone. 
 			</p>
-		</div>
 
 	  <label class="item item-input">
 	    <span class="input-label">Number</span>
@@ -28,7 +22,7 @@
 
 		<button type="submit" 
 			ng-disabled="!validTel(newUser.tel) || confirmCode.loading" 
-			class="button button-full button-royal" 
+			class="button button-block button-petri" 
 			ng-click="sendConfirm(newUser.tel)">
 			<span ng-if="!confirmCode.sent">Send </span>
 			<span ng-if="confirmCode.sent">Resend </span>
@@ -36,55 +30,55 @@
 		</button>
 	</form>
 
-	<form ng-switch-when="2" name="phoneForm">
+	<form ng-switch-when="2" name="phoneForm" class="login-form">
 		
-		<div class="padding text-center">
-			<h4 class="padding">
+			<h4 class="padding talign-center margin-bottom-big">
 				Check your text messages for your confirmation code
 			</h4>
-		  <p ng-if="confirmCode.error" class="assertive padding">
+		  <p ng-if="confirmCode.error" class="assertive padding talign-cente margin-bottom-bigr ">
 				{{confirmCode.error}}
 			</p>
-		</div>
 
 		<label class="item item-input">
 	    <span class="input-label">Confirm Code</span>
 	    <input ng-model="newUser.confirmCode" type="tel" name="tel" required>
 	  </label>
 
-		<button type="submit" class="button button-full button-royal" ng-click="addTel(newUser.confirmCode)">
+		<button type="submit" class="button button-full button-petri" ng-click="addTel(newUser.confirmCode)">
 			Confirm Phone Number
 		</button>
 
-		<button class="button button-clear button-positive" ng-click="goToStep(1)">
+		<div class="hrule"></div>
+
+		<button class="button button-block button-outline button-petri" ng-click="goToStep(1)">
 		  re-enter phone number
 		</button>
 
 	</form>
 
-	<form ng-switch-when="3" class="onboarding-form" name="contactsForm">
+	<form ng-switch-when="3" class="login-form" name="contactsForm">
 		<div class="padding text-center" >
 			<h4 class="padding">
-				Sup uses the phone numbers in your address book to help you find your friends.
+				Petri uses the phone numbers in your address book to help you find your friends.
 			</h4>
 		  <p>
-				Only friends who have your phone number will be able to find you in Sup.
+				Only friends who have your phone number will be able to find you in Petri.
 			</p>
 			<p>
 				We won't spam or auto-add your friends.
 			</p>
-			<p>
+			<p class="margin-bottom-big">
 				Read our <a href="" ng-click="openPrivacyPolicy()">Privacy Policy</a> to learn more.
 			</p>
 		</div>
 	
-		<button type="submit" ng-disabled="loading" class="button button-full button-royal" ng-click="addContacts()">
+		<button type="submit" ng-disabled="loading" class="button button-block button-petri" ng-click="addContacts()">
 			Find Friends
 		</button>
 
 	</form>
 
-	<form ng-switch-when="4" name="contactsForm">
+	<form ng-switch-when="4" name="contactsForm" class="login-form">
 		<div class="padding text-center">
 			<h4 ng-if="currentUser.firstName"class="padding">
 				Finally, make sure your name is correct
@@ -92,8 +86,8 @@
 			<h4 ng-if="!currentUser.firstName"class="padding">
 				Finally, set your name
 			</h4>
-		  <p>
-				Remember, this is how friends will find you in Sup.
+		  <p class="padding margin-bottom-big">
+				Remember, this is how friends will find you in Petri.
 			</p>
 		</div>
 		<label class="item item-input">
@@ -105,7 +99,7 @@
     	<input ng-model="currentUser.lastName" type="text" name="lastName" required>
   	</label>
 
-		<button type="submit" class="button button-full button-royal" ng-click="saveName()">Finished!</button>
+		<button type="submit" class="button button-block button-petri" ng-click="saveName()">Finished!</button>
 
 	</form>
 

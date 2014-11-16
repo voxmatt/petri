@@ -2,12 +2,23 @@
   padding: 100px 40px;
 }
 
+.event-header {
+  padding: 5px 10px;
+  text-align: center;
+  width: 100%;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .primary-circle{
   @include create-circle($primaryCircleRadiusPx, true);
   @include flex-centering();
   position:absolute;
-  background: rgba(0,0,0,.5);
+  background: rgba(0,0,0,.2);
   font-weight: 400;
+  border: $circleBorderGreen 1px solid;
   color: white;
   
   h2{
@@ -34,52 +45,58 @@
     height:100%;
     z-index: -1;
     border-radius:50%;
+    opacity: .7;
   }
 }
 
 .orbit-circle{
   @include create-circle($orbitCircleRadiusPx, true);
   @include flex-centering();
-  background: rgba(0,0,0,.5);
-  overflow: hidden;
-  color: white;
-  font-size: 12px;  
-  line-height:14px;
-  font-weight:600;
-  text-transform: uppercase;
-  text-shadow: 0 0 2px black;
 
-  &.selected {
-    background-color: #ccc;
-  }
   &.orbit-circle-bottom{
     $y-translate: #{$primaryCircleRadius + $orbitCircleRadius + $paddingPrimaryOrbit}px;
     @include transform(translate3d(0, $y-translate, 0) );
   }
   
+  .orbit-circle-rotate-correction {
+    @include set-position(0,0,0,0);
+    @include flex-centering();
+    border-radius: 50%;
+  }
+
   .orbit-circle-content {
     @include set-position(0,0,0,0);
     @include flex-centering();
     overflow: hidden;
-
+    border-radius: 50%;
+    color: white;
+    font-size: 12px;  
+    line-height:14px;
+    font-weight:600;
+    text-transform: uppercase;
+    text-shadow: 0 0 2px black;
+    border: $circleBorderGreen 1px solid;
+  
+    &.selected {
+      background-color: #ccc;
+    }
     i.icon {
       font-size: 25px;
     }
-  }
 
-
-  img {
-    position:absolute;
-    left: -100%;
-    right: -100%;
-    top: -100%;
-    bottom: -100%;
-    margin: auto; 
-    min-height: 100%;
-    min-width: 100%;
-    z-index: -1;
-    border-radius:50%;
-    opacity: 0.7;
+    img {
+      position:absolute;
+      left: -100%;
+      right: -100%;
+      top: -100%;
+      bottom: -100%;
+      margin: auto; 
+      min-height: 100%;
+      min-width: 100%;
+      z-index: -1;
+      border-radius:50%;
+      opacity: 0.7;
+    }
   }
 }
 
