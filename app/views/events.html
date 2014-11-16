@@ -1,8 +1,31 @@
 <ion-slide-box class="event-slider" on-slide-changed="slideHasChanged($index)" show-pager="true" active-slide="activeSlide">
   
   <ion-slide>
+    <h1 class="event-header">{{user.firstName}} {{user.lastName}}</h1>
+    <div class="orbit-circle-container contains-3-orbit-circles">
+      <div class="orbit-circle">
+        <div class="orbit-circle-rotate-correction">
+          <div class="orbit-circle-content">
+            Name
+          </div>
+        </div>
+      </div>
+      <div class="orbit-circle">
+        <div class="orbit-circle-rotate-correction">
+          <div class="orbit-circle-content">
+            Picture
+          </div>
+        </div>
+      </div>
+      <div class="orbit-circle">
+        <div class="orbit-circle-rotate-correction">
+          <div class="orbit-circle-content">
+            Phone Number
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="primary-circle">
-      <h2>{{user.firstName}} {{user.lastName}}</h2>
     </div>
     <div class="orbit-circle orbit-circle-bottom" hm-tap="logout()">
       Log Out
@@ -15,8 +38,12 @@
 
     <div class="orbit-circle-container contains-{{event.peeps.length}}-orbit-circles">
       <div class="orbit-circle" ng-repeat="peep in event.peeps" ng-click="clickPeep(peep)">
-        <span class="orbit-circle-content">{{peep.name.fullName}}</span>
-        <img ng-if="peep.photoUrl" ng-src="{{peep.photoUrl}}">
+        <div class="orbit-circle-rotate-correction">
+          <div class="orbit-circle-content">
+            {{peep.name.fullName}}
+            <img ng-if="peep.photoUrl" ng-src="{{peep.photoUrl}}">
+          </div>
+        </div>
       </div>
     </div>
     <div class="primary-circle">

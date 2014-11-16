@@ -8,26 +8,26 @@ angular.module('SupAppIonic')
 		var steps = {
 			type: {
 				num: 1,
-				text: 'What\'re you thinking?',
+				text: 'What\'s on tap?',
 				numOrbitCircles: 7,
 				options: [
 					{name: 'Music', section: 'arts', category: 'music', class:'new-event-music'},
 					{name: 'Movie', section: 'arts', category: 'movie', class:'new-event-movie'},
 					{name: 'Drinks', section: 'drinks', category: 'drinks', class:'new-event-drinks'},
 					{name: 'Food', section: 'food', category: null, class:'new-event-food'},
-					{name: 'Dancing', section: null, category: 'dancing', class:'new-event-dancing'},
+					{name: 'Dancin\'', section: null, category: 'dancing', class:'new-event-dancing'},
 					{name: 'Out doors', section: 'outdoors', category: null, class:'new-event-outdoors'},
 					{name: 'Chillin\'', section: null, category: 'chilling', class:'new-event-chillin'}
 				],
 			},
 			location: {
 				num: 2,
-				text: 'Where\'s this going down?',
+				text: 'Where to?',
 				options: []
 			},
 			peeps: {
 				num: 3,
-				text: 'Who\'re you with?'
+				text: 'With who?'
 			},
 			saving: {
 				text: 'Saving...',
@@ -155,6 +155,14 @@ angular.module('SupAppIonic')
 			}, 1000);
 		};
 
+		$scope.getName = function(option) {
+			if ($scope.step.num !== 3 && option.name) {
+				return option.name.truncate(15, 'right', '...');
+			} else if (option.name && option.name.abbName) {
+				return option.name.abbName;
+			}
+		};
+
 		function addCurrentUserToEvent() {
 			UserSrvc.getCurrentUser().then(function(user){
 				newEvent.createdBy = user.contactId;
@@ -194,10 +202,6 @@ angular.module('SupAppIonic')
 				return sortedPeepsWithLimit;
 			}
 		}
-
-		$scope.log = function(event) {
-			console.log(event);
-		};
 
 		function incrementUsedPeeps(peeps) {
 

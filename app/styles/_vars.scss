@@ -1,3 +1,7 @@
+// COLOR PALLETE //
+$neonGreen: #2BFEC3;
+
+
 $colorBackground: #000;
 $colorBackgroundInput: #505050;
 $colorBorder: #222;
@@ -19,7 +23,7 @@ $orbitCircleRadius: 28;
 $paddingPrimaryOrbit: 5;
 $paddingOrbitOrbit: 3;
 
-$circleBorderGreen: #2BFEC3;
+$circleBorderGreen: $neonGreen;
 
 $actionBtnRadiusPx: 28px;
 
@@ -30,3 +34,5 @@ $colorFood: #8EDDCB;
 $colorDancing: #E89069;
 $colorOutdoors: #E5E796;
 $colorChillin: #13B5E2;
+
+$colorLoadingDots: $neonGreen;

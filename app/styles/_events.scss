@@ -100,6 +100,39 @@
   }
 }
 
+.option-selection {
+  .scroll-content {
+    background: $colorBackground;
+  }
+
+  .item {
+    border-color: $colorBorder;
+  }
+
+  .item-input {
+    padding: 10px 20px;
+
+    input {
+      color: white;
+      border-radius: $borderRadius;
+      padding: 5px 15px;
+      background-color: $colorBackgroundInput;
+    }
+  }
+
+  .bar.bar-header {
+    background-color: $colorBorder;
+    background-image: none;
+    
+    .button-left {
+      @include set-position(0,null,0,0);
+      width: 30px;
+      height: initial;
+      border-radius: 0;
+    }
+  }
+}
+
 .action-button{
   @include create-circle($actionBtnRadiusPx, false);
   @include set-position(null, calc(50% - #{$actionBtnRadiusPx}), 20px, null, fixed);
@@ -154,31 +187,31 @@
   }
 }
 .new-event-music{
-  background-color: rgba($colorMusic, .5);
+  background-color: rgba($colorMusic, .3);
   &:before{
     content: "\f1b6";
   }
 }
 .new-event-movie{
-  background-color: rgba($colorMovie, .5);
+  background-color: rgba($colorMovie, .3);
   &:before{
     content: "\f18f";
   }
 }
 .new-event-drinks{
-  background-color: rgba($colorDrinks, .5);
+  background-color: rgba($colorDrinks, .3);
   &:before{
     content: "\f26a";
   }
 }
 .new-event-food{
-  background-color: rgba($colorFood, .5);
+  background-color: rgba($colorFood, .3);
   &:before{
     content: "\f2a8";
   }
 }
 .new-event-dancing{
-  background-color: rgba($colorDancing, .5);
+  background-color: rgba($colorDancing, .3);
   &:before{
     content: "\f15b";
   }
@@ -190,7 +223,7 @@
   }
 }
 .new-event-chillin{
-  background-color: rgba($colorChillin, .5);
+  background-color: rgba($colorChillin, .3);
   &:before{
     content: "\f2b6";
   }
