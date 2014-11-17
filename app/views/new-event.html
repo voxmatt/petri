@@ -37,7 +37,9 @@
   Cancel
 </div>
 <div ng-if="step.num === 3" class="orbit-circle orbit-circle-bottom" ng-click="done()" ng-disabled="loading">
-	Done
+  <div class="orbit-circle-content">
+	  Done
+  </div>
 </div>
 
 <div ng-if="moreOptions.show">
@@ -51,7 +53,7 @@
     	<!-- Locations List -->
       <ion-list ng-if="step.num == 2">
       	<ion-item class="item item-input">
-				  <input type="text" placeholder="Search" ng-model="moreOptions.locationFilter">
+				  <input type="text" placeholder="Search" ng-model="moreOptions.locationFilter" class="location-filter">
       	</ion-item>
       	<ion-item ng-repeat="item in moreOptions.options | filter:moreOptions.locationFilter" ng-click="selectOption(step.num, item)" class="item-avatar">
 					<div class="item-image">
@@ -66,9 +68,9 @@
 			<!-- People List -->
       <ion-list ng-if="step.num == 3">
       	<ion-item class="item item-input">
-				  <input type="text" placeholder="Search" ng-model="moreOptions.peepsFilter">
+				  <input type="text" placeholder="Start typing to search" ng-model="moreOptions.peepsFilter" class="peeps-filter">
       	</ion-item>
-      	<ion-item ng-repeat="item in moreOptions.options | filter:moreOptions.peepsFilter" class="item-avatar item-peep">
+      	<ion-item ng-if="moreOptions.peepsFilter.length > 1" ng-repeat="item in moreOptions.options | filter:moreOptions.peepsFilter" class="item-avatar item-peep">
           <div class="item-image">
             <img ng-if="item.photoUrl" ng-src="{{item.photoUrl}}">
             <div ng-if="!item.photoUrl" class="peep-initials">
@@ -80,7 +82,7 @@
           <button ng-click="selectOption(step.num, item)" 
                   ng-class="{'button-outline':!item.isSelected}"
                   class="button button-petri">
-            With You
+            There
           </button>
           <button ng-click="selectOption(step.num, item, true)" 
                   ng-class="{'button-outline':!item.isInvited}"

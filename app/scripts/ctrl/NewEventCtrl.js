@@ -2,9 +2,9 @@
 /* global $ */
 
 angular.module('SupAppIonic')
-	.controller('NewEventCtrl', function ($scope, $q, $timeout, EventSrvc, LocationSrvc, $location, ContactSrvc, UserSrvc, PhotoSrvc) {
+	.controller('NewEventCtrl', function ($scope, $q, $timeout, EventSrvc, LocationSrvc, $location, ContactSrvc, UserSrvc, PhotoSrvc, PhoneSrvc) {
 		
-		var newEvent, draggingElm, hintTimeout, currentText, allPeeps, steps, nextPeepIndex;
+		var newEvent, draggingElm, hintTimeout, currentText, allPeeps, steps, nextPeepIndex, currentUser;
 
 		(function init() {
 			newEvent = {};
@@ -12,6 +12,7 @@ angular.module('SupAppIonic')
 			hintTimeout = null;
 			currentText = '';
 			allPeeps = {};
+			currentUser = {};
 			steps = {
 				type: {
 					key: 'type',
@@ -19,13 +20,13 @@ angular.module('SupAppIonic')
 					text: 'What\'s on tap?',
 					numOrbitCircles: 7,
 					options: [
-						{name: 'Music', section: 'arts', category: 'music', class:'new-event-music'},
-						{name: 'Movie', section: 'arts', category: 'movie', class:'new-event-movie'},
-						{name: 'Drinks', section: 'drinks', category: 'drinks', class:'new-event-drinks'},
-						{name: 'Food', section: 'food', category: null, class:'new-event-food'},
-						{name: 'Dancin\'', section: null, category: 'dancing', class:'new-event-dancing'},
-						{name: 'Out doors', section: 'outdoors', category: null, class:'new-event-outdoors'},
-						{name: 'Chillin\'', section: null, category: 'chilling', class:'new-event-chillin'}
+						{name: 'Music', section: 'arts', category: 'music', class:'event-music'},
+						{name: 'Movie', section: 'arts', category: 'movie', class:'event-movie'},
+						{name: 'Drinks', section: 'drinks', category: 'drinks', class:'event-drinks'},
+						{name: 'Food', section: 'food', category: null, class:'event-food'},
+						{name: 'Dancin\'', section: null, category: 'dancing', class:'event-dancing'},
+						{name: 'Out doors', section: 'outdoors', category: null, class:'event-outdoors'},
+						{name: 'Chillin\'', section: null, category: 'chilling', class:'event-chillin'}
 					],
 				},
 				location: {
@@ -118,9 +119,10 @@ angular.module('SupAppIonic')
 			if (stepNum === 2) {
 				LocationSrvc.getFoursquareVenues(100, $scope.step.section, $scope.step.category).then(function(result){
 					$scope.loading = false;
+					$('location-filter').focus();
 					$scope.moreOptions = {
 						show: true,
-						title: 'Where\'s this going down?',
+						title: 'Where To?',
 						options: result.locations
 					};
 				}, function(error){
@@ -129,9 +131,10 @@ angular.module('SupAppIonic')
 
 			} else if (stepNum === 3) {
 				$scope.loading = false;
+				$('peeps-filter').focus();
 				$scope.moreOptions = {
 					show: true,
-					title: 'Who\'re you with?',
+					title: 'With Who?',
 					options: allPeeps
 				};
 			}
@@ -148,6 +151,7 @@ angular.module('SupAppIonic')
 				$scope.loading = false;
 				$location.url('/events');
 				incrementUsedPeeps(newEvent.peeps);
+				sendInvites(newEvent);
 			}, function(error) {
 				console.log(error);
 			});
@@ -222,8 +226,11 @@ angular.module('SupAppIonic')
 
 		function addCurrentUserToEvent() {
 			UserSrvc.getCurrentUser().then(function(user){
+				currentUser = user;
 				newEvent.createdBy = user.contactId;
-				newEvent.peeps = [ EventSrvc.getUserObjForEvent(user) ];
+				var userObj = EventSrvc.getUserObjForEvent(user);
+				userObj.joinTime = Date.now();
+				newEvent.peeps = [ userObj ];
 				newEvent.peepsInvited = [];
 			}, function(error) {
 				console.log(error);
@@ -261,16 +268,64 @@ angular.module('SupAppIonic')
 		function incrementUsedPeeps(peeps) {
 
 			peeps.each(function(peep){
-				if (allPeeps[peep.id]){
-					if (allPeeps[peep.id].numTimesIncluded) {
-						allPeeps[peep.id].numTimesIncluded = Number(allPeeps[peep.id].numTimesIncluded) + 1;
-					} else {
-						allPeeps[peep.id].numTimesIncluded = 1;
+				ContactSrvc.getContactByPhoneNumber(peep.id).then(function(peepObj){
+					if (peepObj) {
+						peepObj.numTimesIncluded = peepObj.numTimesIncluded || 0;
+						peepObj.numTimesIncluded++;
+						ContactSrvc.updateContact(peepObj, peep.id);
 					}
-
-					ContactSrvc.updateContact(peep, peep.id);
-				}
+				});
 			});
+		}
+
+		function sendInvites(newEvent) {
+			if (newEvent.peepsInvited.length && currentUser.firstName && currentUser.lastName) {
+				var message = currentUser.firstName + ' ' + currentUser.lastName + ' wants to know if you want to join him'; 
+
+				if (newEvent.peeps.length > 1) {
+					var num = newEvent.peeps.length;
+					newEvent.peeps.each(function(peep, index){
+						if (index !== 0) {
+							if (num === 2 || num === index + 1) {
+								message += ' and ';
+							} else {
+								message += ', ';
+							}
+
+							if (peep.name.fullName) {
+								message += peep.name.fullName;
+							}
+						}
+					});
+				}
+
+				switch (newEvent.type) {
+					case 'Music':
+					case 'Drinks':
+					case 'Food':
+					case 'Dancin\'':
+						message += ' for some ' + newEvent.type.toLowerCase();
+						break;
+					case 'Movie':
+						message += ' for a movie';
+						break;
+					case 'Out doors':
+						message += ' to hang outdoors';
+						break;
+					case 'Chillin\'':
+						message += ' to hang out';
+						break;
+				}
+
+				message += ' at ' + newEvent.location.name + '.';
+
+				console.log(message);
+
+				newEvent.peepsInvited.each(function(peep){
+					PhoneSrvc.sendMessage(peep.id, message);
+				});
+			}
+			
 		}
 
 		function getOrbitCircle(event) {

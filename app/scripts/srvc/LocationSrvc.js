@@ -283,7 +283,8 @@ angular.module('SupAppIonic')
       getLatLong: getLatLong,
       getFoursquareVenues: getFoursquareVenues,
       getStaticDistanceAway: getStaticDistanceAway,
-      cacheFoursquare: cacheFoursquare
+      cacheFoursquare: cacheFoursquare,
+      getDistanceBtwn: getDistanceBtwn
     };
   }
 );
