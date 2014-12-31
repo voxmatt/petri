@@ -1,17 +1,23 @@
 'use strict';
-/*global $, alert, $, Firebase */
+/*global $, $, Firebase */
 
 angular.module('SupAppIonic')
-  .controller('EventsCtrl', function ($scope, $rootScope, $location, $timeout, $firebase, $firebaseSimpleLogin, EventSrvc, $ionicSlideBoxDelegate, $cordovaDialogs, ContactSrvc, LocationSrvc) {
+  .controller('EventsCtrl', function ($scope, $rootScope, $location, $timeout, $firebase, $firebaseSimpleLogin, EventSrvc, $ionicSlideBoxDelegate, $cordovaDialogs, ContactSrvc, LocationSrvc, StateSrvc) {
+
+    ////////////////////////
+    //        INIT        //
+    ////////////////////////
 
     var viewingEvent = {};
     var currentUser = {};
     var draggingElm = {};
     var coords = null;
     var hintTimeout = null;
+    var eventKeyMap = {};
     $scope.eventShown = 1;
     $scope.activeSlide = 1;
     $scope.user = currentUser || null;
+    $scope.moreOptions = {show: false};
 
     var ref = new Firebase('https://petri.firebaseio.com/events');
     var sync = $firebase(ref);
@@ -21,9 +27,15 @@ angular.module('SupAppIonic')
     syncedEvents.$loaded().then(function(){
       EventSrvc.removeOldEvents($scope.events);
       $ionicSlideBoxDelegate.update();
+      var i = 0;
+      for (var key in $scope.events) {
+        if ($scope.events.hasOwnProperty(key) && key[0] !== '$') {
+          eventKeyMap[i + 2] = key;
+          i++;
+        }
+      }
     });
     
-
     $rootScope.$on('userDefined', function(event, user){
       currentUser = user;
       $scope.user = currentUser;
@@ -90,20 +102,6 @@ angular.module('SupAppIonic')
       $location.url('/new-event');
     };
 
-    $scope.join = function(event) {
-      var x = event.gesture.deltaX;
-      var y = event.gesture.deltaY;
-      var parent = $(event.gesture.target).parents('.primary-circle').length;
-      var self = $(event.gesture.target).hasClass('primary-circle');
-      var onImg = $(event.gesture.target).hasClass('event-location-photo');
-
-      angular.element('.action-button').css({'-webkit-transform': 'translate(' + x + 'px, ' + y + 'px)'});
-
-      if ((parent || self) && !onImg) {
-        joinEvent();
-      }
-    };
-
     $scope.resetActionBtn = function(){
       angular.element('.action-button').css({'-webkit-transform': 'translate(0px, 0px)'});
     };
@@ -148,17 +146,31 @@ angular.module('SupAppIonic')
       }
     };
 
+    $scope.dragStartActionBtn = function(event){
+      if (!$scope.createdEvent()) {
+        draggingElm = event.target;
+        if (hintTimeout) {
+          $timeout.cancel(hintTimeout);
+        }
+      }
+    };
+
     $scope.draggingOption = function(event) {
       var translation = 'translate3d(' + event.gesture.deltaX + 'px,' + event.gesture.deltaY + 'px,0)';
       $(draggingElm).css({'transform': translation, '-webkit-transform': translation});
     };
 
-    $scope.maybeSelectOption = function(event, peep) {
+    $scope.maybeSelectOption = function(event, peep, type) {
       var xPos = event.gesture.center.pageX;
       var yPos = event.gesture.center.pageY;
-      
-      if ( checkWithinPrimaryCircle(xPos, yPos) ) {
+      var selected = checkWithinPrimaryCircle(xPos, yPos);
+      if ( selected && !type) {
         $scope.selectedPeep = peep;
+      } else if ( selected && type === 'join' && !$scope.createdEvent()) {
+        joinEvent();
+      } else if (selected && type === 'addPeeps') {
+        StateSrvc.setEditingEvent(viewingEvent);
+        $location.url('/new-event');
       }
       var translation = 'translate3d(0,0,0)';
       $('.orbit-circle-content').css({'transform': translation, '-webkit-transform': translation});
@@ -193,18 +205,19 @@ angular.module('SupAppIonic')
       return count;
     };
 
-    $scope.slideHasChanged = function() {
+    $scope.slideHasChanged = function(index) {
       $scope.selectedPeep = null;
+      viewingEvent = $scope.events[eventKeyMap[index]];
+    };
+
+    $scope.moreOptionsClose = function(){
+      $scope.moreOptions.show = false;
     };
 
     function joinEvent() {
-      EventSrvc.addUserToEvent(currentUser);
-
-      var index = $scope.events.findIndex(function(event){
-        return event.id === viewingEvent.id;
-      });
-
-      $scope.events[index].peeps.push(EventSrvc.getUserObjForEvent(currentUser));
+      if (viewingEvent.peeps) {
+        viewingEvent.peeps.push(EventSrvc.getUserObjForEvent(currentUser));
+      }
     }
 
     function getDistanceAway(eventObj) {
@@ -217,8 +230,7 @@ angular.module('SupAppIonic')
         var kms = LocationSrvc.getDistanceBtwn(lat1, lon1, lat2, lon2);
         var meters = kms / 1000;
         return LocationSrvc.getStaticDistanceAway(meters);
-
-      } 
+      }
     }
 
     function getOrbitCircle(event) {

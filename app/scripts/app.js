@@ -66,6 +66,13 @@ angular.module('SupAppIonic', [
         controller: 'NewEventCtrl'
       })
 
+      .state('editEvent', {
+        authRequired: true,
+        url: '/edit-event/:id/:step',
+        templateUrl: 'views/new-event.html',
+        controller: 'NewEventCtrl'
+      })
+
     ;
   })
 

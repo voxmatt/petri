@@ -1,4 +1,4 @@
-<ion-slide-box class="event-slider" on-slide-changed="slideHasChanged($index)" show-pager="true" active-slide="activeSlide" ng-class="{'homepage-slide':activeSlide === 1}">
+<ion-slide-box class="event-slider" show-pager="true" on-slide-changed="slideHasChanged($index)" active-slide="activeSlide" ng-class="{'homepage-slide':activeSlide === 1}">
   
   <ion-slide>
     <h1 class="event-header">{{user.firstName}} {{user.lastName}}</h1>
@@ -37,7 +37,7 @@
     <div class="event-count">{{getNumberOfEvents()}}</div>
   </ion-slide>
 
-  <ion-slide ng-repeat="(timestamp, event) in events" on-slide-changed="eventViewingChanged($index)">
+  <ion-slide ng-repeat="(timestamp, event) in events | orderBy: timestamp">
     
     <h1 class="event-header">{{event.location.name}}</h1>
     
@@ -47,7 +47,7 @@
       <p class="text-center" ng-if="selectedPeep && !selectedPeep.label">{{selectedPeep.name.firstName}} has no label</p>
     </div>
 
-    <div class="orbit-circle-container contains-{{event.peeps.length + 1}}-orbit-circles">
+    <div class="orbit-circle-container contains-{{event.peeps.length}}-orbit-circles">
       <div class="orbit-circle" 
            ng-repeat="peep in event.peeps"
            hm-dragstart="dragStart($event)"
@@ -57,17 +57,6 @@
           <div class="orbit-circle-content" ng-class="{'initials':!peep.photoUrl}">
             {{peep.name.initials}}
             <img ng-if="peep.photoUrl" ng-src="{{peep.photoUrl}}">
-          </div>
-        </div>
-      </div>
-
-      <div class="orbit-circle" 
-           hm-dragstart="dragStart($event)"
-           hm-drag="draggingOption($event)"
-           hm-dragend="maybeSelectOption($event, {}, true)">
-        <div class="orbit-circle-rotate-correction">
-          <div class="orbit-circle-content">
-            +
           </div>
         </div>
       </div>
@@ -82,52 +71,32 @@
       <h2>{{selectedPeep.name.fullName}}</h1>
       <span class="event-time-ago">joined {{getTimeAgo()}}</span>
     </div>
-    <div class="orbit-circle orbit-circle-bottom" ng-if="createdEvent()" hm-hold="deleteEvent()">
+
+<!--     <div class="orbit-circle orbit-circle-bottom" ng-if="!createdEvent()" hm-hold="deleteEvent()">
       <div class="orbit-circle-content">
         Delete
+      </div>
+    </div> -->
+
+    <div 
+         class="orbit-circle orbit-circle-bottom" 
+         hm-dragstart="dragStart($event)"
+         hm-drag="draggingOption($event)"
+         hm-dragend="maybeSelectOption($event, {}, 'addPeeps')">
+      <div class="orbit-circle-rotate-correction">
+          <div class="orbit-circle-content">
+            +
+          </div>
       </div>
     </div>
   </ion-slide>
 
 </ion-slide-box>
-<div ng-if="!createdEvent()" hm-tap="newEvent()" hm-drag="join($event)" hm-dragend="resetActionBtn()" class="action-button" ng-class="{'homepage-slide':activeSlide === 1}"></div>
-<div ng-if="createdEvent()" hm-tap="newEvent()" class="action-button"></div>
 
-<div ng-if="moreOptions.show">
-  <ion-popover-view class="option-selection">
-    <ion-header-bar>
-      <button class="button button-left button-petri" ng-click="moreOptionsClose()">x</button>
-      <h1 class="title">{{moreOptions.title}}</h1>
-      <button class="button button-right button-petri" ng-if="step.num == 3" ng-click="done()">Done</button>
-    </ion-header-bar>
-    <ion-content>
-      <!-- People List -->
-      <ion-list ng-if="step.num == 3">
-        <ion-item class="item item-input">
-          <input type="text" placeholder="Start typing to search" ng-model="moreOptions.peepsFilter" class="peeps-filter">
-        </ion-item>
-        <ion-item ng-if="moreOptions.peepsFilter.length > 1" ng-repeat="item in moreOptions.options | filter:moreOptions.peepsFilter" class="item-avatar item-peep">
-          <div class="item-image">
-            <img ng-if="item.photoUrl" ng-src="{{item.photoUrl}}">
-            <div ng-if="!item.photoUrl" class="peep-initials">
-              {{item.name.initials}}
-            </div>
-          </div>
-          <h2 ng-if="item.name.fullName">{{item.name.fullName}}</h2>
-          <h2 ng-if="!item.name.fullName">{{item.name.firstName}}</h2>
-          <button ng-click="selectOption(step.num, item)" 
-                  ng-class="{'button-outline':!item.isSelected}"
-                  class="button button-petri">
-            There
-          </button>
-          <button ng-click="selectOption(step.num, item, true)" 
-                  ng-class="{'button-outline':!item.isInvited}"
-                  class="button button-petri">
-            Invite
-          </button>
-        </ion-item>
-      </ion-list>
-
-    </ion-content>
-  </ion-popover-view>
+<div hm-tap="newEvent()" 
+     hm-dragstart="dragStartActionBtn($event)"
+     hm-drag="draggingOption($event)"
+     hm-dragend="maybeSelectOption($event, peep, 'join')"
+     class="action-button" 
+     ng-class="{'homepage-slide':activeSlide === 1}">
 </div>

@@ -1,20 +1,23 @@
-// 'use strict';
+'use strict';
 
-// angular.module('SupAppIonic')
-// 	.factory('StateSrvc', function () {
-// 		var currentUser = '';
+angular.module('SupAppIonic')
+	.factory('StateSrvc', function () {
+    
+    var editingEvent;
+		
+    function setEditingEvent(event) {
+			editingEvent = event;
+		}
 
-// 		function getCurrentUser() {
-// 			return currentUser;
-// 		}
+    function getEditingEvent() {
+      var event = editingEvent;
+      editingEvent = null;
+      return event;
+    }
 
-// 		function setCurrentUser(user) {
-// 			currentUser = user;
-// 		}
-
-// 		return {
-// 			getCurrentUser: getCurrentUser,
-// 			setCurrentUser: setCurrentUser
-// 		};
-// 	})
-// ;
+		return {
+			setEditingEvent: setEditingEvent,
+			getEditingEvent: getEditingEvent
+		};
+	})
+;

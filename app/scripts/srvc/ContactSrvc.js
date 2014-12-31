@@ -235,7 +235,7 @@ angular.module('SupAppIonic')
 
 			var localContacts = getContactsLocally();
 			if (localContacts && localContacts[phoneNumber]) {
-				$q.resolve(localContacts[phoneNumber]);
+				deferred.resolve(localContacts[phoneNumber]);
 				return deferred.promise;
 			}
 

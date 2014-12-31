@@ -26,6 +26,12 @@ angular.module('SupAppIonic')
 			var cleanEvent = angular.copy(newEvent);
 			var key = Date.now();
 
+			if (newEvent.key) {
+				return updateEvent(newEvent.key, cleanEvent);
+			} else {
+				cleanEvent.key = key;
+			}
+
 			ref.child(key).set(cleanEvent, function(error){
 				if (error) {
 					deferred.reject(error);
