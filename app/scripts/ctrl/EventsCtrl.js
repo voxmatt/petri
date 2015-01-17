@@ -2,14 +2,14 @@
 /*global $, $, Firebase */
 
 angular.module('SupAppIonic')
-  .controller('EventsCtrl', function ($scope, $rootScope, $location, $timeout, $firebase, $firebaseSimpleLogin, EventSrvc, $ionicSlideBoxDelegate, $cordovaDialogs, ContactSrvc, LocationSrvc, StateSrvc) {
+  .controller('EventsCtrl', function ($scope, $rootScope, $state, $stateParams, $location, $timeout, $firebase, $firebaseSimpleLogin, EventSrvc, $ionicSlideBoxDelegate, $cordovaDialogs, ContactSrvc, LocationSrvc, StateSrvc, $ionicActionSheet, UserSrvc) {
 
     ////////////////////////
     //        INIT        //
     ////////////////////////
 
     var viewingEvent = {};
-    var currentUser = {};
+    var currentUser = UserSrvc.getUserLocally();
     var draggingElm = {};
     var coords = null;
     var hintTimeout = null;
@@ -34,6 +34,9 @@ angular.module('SupAppIonic')
           i++;
         }
       }
+      LocationSrvc.getLatLong().then(function(coordinates){
+        coords = coordinates;
+      });
     });
     
     $rootScope.$on('userDefined', function(event, user){
@@ -79,8 +82,8 @@ angular.module('SupAppIonic')
       return getDistanceAway(eventObj);
     };
 
-    $scope.getTimeAgo = function() {
-      var strMillis = this.$parent.timestamp;
+    $scope.getTimeAgo = function(timestamp) {
+      var strMillis = timestamp;
       var date = Date.create(parseInt(strMillis));
       var minutesAgo = date.minutesAgo();
       if (minutesAgo < 60) {
@@ -118,25 +121,9 @@ angular.module('SupAppIonic')
       }
     };
 
-    $scope.deleteEvent = function() {
-      EventSrvc.removeEvent(viewingEvent.id);
-      var index = $scope.events.findIndex(function(event){
-        return event.id === viewingEvent.id;
-      });
-
-      $scope.events.removeAt(index);
-      $ionicSlideBoxDelegate.update();
-
-      if ($scope.events.length) {
-        viewingEvent = $scope.events[index];
-      } else {
-        viewingEvent = null;
-      }
-    };
-
     $scope.logout = function() {
-      // var firebaseRef = new Firebase('https://petri.firebaseio.com/');
-      // $firebaseSimpleLogin(firebaseRef).$logout();
+      var ref = new Firebase('https://petri.firebaseio.com/');
+      $firebaseSimpleLogin(ref).$logout();
     };
 
     $scope.dragStart = function(event){
@@ -168,9 +155,6 @@ angular.module('SupAppIonic')
         $scope.selectedPeep = peep;
       } else if ( selected && type === 'join' && !$scope.createdEvent()) {
         joinEvent();
-      } else if (selected && type === 'addPeeps') {
-        StateSrvc.setEditingEvent(viewingEvent);
-        $location.url('/new-event');
       }
       var translation = 'translate3d(0,0,0)';
       $('.orbit-circle-content').css({'transform': translation, '-webkit-transform': translation});
@@ -214,22 +198,90 @@ angular.module('SupAppIonic')
       $scope.moreOptions.show = false;
     };
 
+    $scope.getDirections = function(event) {
+      // Show the action sheet
+      var hideSheet = $ionicActionSheet.show({
+        buttons: [
+          { text: 'Open in Apple Maps' },
+          { text: 'Open in Google Maps' }
+        ],
+        cancelText: 'Cancel',
+        cancel: function() {
+          hideSheet();
+        },
+        buttonClicked: function(index) {
+          var url = 'http://maps.apple.com/?q=';
+          if (index === 0) {
+            url += event.location.name;
+            url += '&spn=';
+          } else if (index === 1) {
+            url = 'comgooglemaps://?q=';
+            url += event.location.name;
+            url += '&center=';
+          }
+          url += event.location.location.lat + ',';
+          url += event.location.location.lng;
+          window.open(url,'_system','location=yes');
+        }
+      });
+    };
+
+    $scope.editSheet = function(passedEvent) {
+      var sheet = {
+        buttons: [
+          { text: 'Add or Invite People' }
+        ],
+        cancelText: 'Cancel',
+        cancel: function() {
+          editSheet();
+        },
+        buttonClicked: function() {
+          StateSrvc.setEditingEvent(passedEvent);
+          $location.url('/new-event');
+        }
+      };
+
+      if ($scope.createdEvent()) {
+        sheet.destructiveText = 'Delete';
+        sheet.destructiveButtonClicked = function() {
+          deleteEvent(passedEvent);
+          editSheet();
+        };
+      }
+
+      var editSheet = $ionicActionSheet.show(sheet);
+    };
+
     function joinEvent() {
       if (viewingEvent.peeps) {
         viewingEvent.peeps.push(EventSrvc.getUserObjForEvent(currentUser));
       }
     }
 
+    function deleteEvent(passedEvent) {
+      EventSrvc.removeEvent(passedEvent.key);
+
+      $state.transitionTo($state.current, $stateParams, {
+        reload: true,
+        inherit: false,
+        notify: true
+      });
+    }
+
     function getDistanceAway(eventObj) {
-      if (eventObj.location && eventObj.location.location && coords) {
+
+      coords = coords || LocationSrvc.getLatLongLocally();
+
+      if (eventObj.location && eventObj.location.location) {
         var lat1 = coords.latitude;
         var lon1 = coords.longitude;
         var lat2 = eventObj.location.location.lat;
-        var lon2 = eventObj.location.location.lng;
+        var lon2 = eventObj.location.location.lng || eventObj.location.location.long;
 
         var kms = LocationSrvc.getDistanceBtwn(lat1, lon1, lat2, lon2);
-        var meters = kms / 1000;
-        return LocationSrvc.getStaticDistanceAway(meters);
+        var meters = kms * 1000;
+        var distanceObj = LocationSrvc.getStaticDistanceAway(meters);
+        return distanceObj.display;
       }
     }
 

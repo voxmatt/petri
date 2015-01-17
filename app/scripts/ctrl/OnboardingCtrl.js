@@ -4,6 +4,7 @@
 angular.module('SupAppIonic')
 	.controller('OnboardingCtrl', function ($scope, $rootScope, $location, $firebaseSimpleLogin, $timeout, UserSrvc, ContactSrvc, PhoneSrvc) {
 		
+		var dataRef = new Firebase('https://petri.firebaseio.com');
 		var	userNumber;
 		var steps = [
 			{ num: 0, title: 'Launching' },
@@ -18,12 +19,16 @@ angular.module('SupAppIonic')
 		$scope.confirmCode = {loading: false, sent: false, code: null, error: null};
 		$scope.currentUser = {};
 		$scope.startProgressBar = false;
+		$scope.loginObj = $firebaseSimpleLogin(dataRef);
+    $scope.user = $scope.loginObj.$getCurrentUser();
 
 		// LAME WAY TO INIT THE APP HERE
 		$rootScope.$on('userDefined', function(event, user){
-      var status = user.registered;
+      var status = user && user.registered || $scope.user && $scope.user.registered || false;
 
-      if(status === true) {
+      if (status === false) {
+        $scope.loginObj.$logout();
+      } else if(status === true) {
 				$location.url('/events');
 			} else if (status === 'addTel') {
 				$scope.step = steps[1];
@@ -35,11 +40,6 @@ angular.module('SupAppIonic')
 				$scope.step = steps[1];
 			}
     });
-
-		var dataRef = new Firebase('https://petri.firebaseio.com');
-    $scope.loginObj = $firebaseSimpleLogin(dataRef);
-
-		$scope.user = $scope.loginObj.$getCurrentUser();
 
 		$scope.goToStep = function (stepNum) {
 			$scope.step = steps[stepNum];

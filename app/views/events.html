@@ -37,7 +37,7 @@
     <div class="event-count">{{getNumberOfEvents()}}</div>
   </ion-slide>
 
-  <ion-slide ng-repeat="(timestamp, event) in events | orderBy: timestamp">
+  <ion-slide ng-repeat="event in events | orderByKey: 'key':true">
     
     <h1 class="event-header">{{event.location.name}}</h1>
     
@@ -61,15 +61,15 @@
         </div>
       </div>
     </div>
-    <div ng-if="!selectedPeep" class="primary-circle">
-      <label>{{getDistanceAway(event).display}}</label>
+    <div ng-if="!selectedPeep" class="primary-circle" hm-tap="getDirections(event)">
+      <label>{{getDistanceAway(event)}}</label>
       <h1>{{event.type}}</h1>
-      <span class="event-time-ago">{{getTimeAgo(event.id)}}</span>
+      <span class="event-time-ago">{{getTimeAgo(event.key)}}</span>
       <img ng-if="event.location.photoUrl" ng-src="{{event.location.photoUrl}}" class="event-location-photo">
     </div>
     <div ng-if="selectedPeep" class="primary-circle" hm-tap="resetSelectedPeep()">
       <h2>{{selectedPeep.name.fullName}}</h1>
-      <span class="event-time-ago">joined {{getTimeAgo()}}</span>
+      <span class="event-time-ago">joined {{getTimeAgo(selectedPeep.joinTime)}}</span>
     </div>
 
 <!--     <div class="orbit-circle orbit-circle-bottom" ng-if="!createdEvent()" hm-hold="deleteEvent()">
@@ -78,14 +78,10 @@
       </div>
     </div> -->
 
-    <div 
-         class="orbit-circle orbit-circle-bottom" 
-         hm-dragstart="dragStart($event)"
-         hm-drag="draggingOption($event)"
-         hm-dragend="maybeSelectOption($event, {}, 'addPeeps')">
+    <div hm-tap="editSheet(event)" class="orbit-circle orbit-circle-bottom">
       <div class="orbit-circle-rotate-correction">
           <div class="orbit-circle-content">
-            +
+            <i class="icon" ng-class="{'ion-edit':!createdEvent(), 'ion-ios-plus-outline': createdEvent}"></i>
           </div>
       </div>
     </div>

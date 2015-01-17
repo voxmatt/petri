@@ -91,7 +91,14 @@ angular.module('SupAppIonic')
 
 			} else if (num === 2){
 				$scope.loading = true;
-				newEvent.location = option;
+
+				if (typeof option === 'string') {
+					LocationSrvc.createVenue(option).then(function(venue){
+						newEvent.location = venue;
+					});
+				} else {
+					newEvent.location = option;
+				}
 
 				ContactSrvc.getContacts().then(function(contacts){
 					nextPeepIndex = 10;
@@ -277,15 +284,22 @@ angular.module('SupAppIonic')
 				});
 			});
 
-			var sortedPeeps = processedPeeps.sortBy(function(peep){
-				if (peep.userId) {
-					return true;
-				} else {
-					return peep.name.firstName;
+			processedPeeps.sort(function compare(a,b){
+				a.numTimesIncluded = a.numTimesIncluded || 0;
+				b.numTimesIncluded = b.numTimesIncluded || 0;
+
+				if (a.numTimesIncluded > b.numTimesIncluded) {
+					return -1;
+				} 
+				else if (a.numTimesIncluded < b.numTimesIncluded){
+					return 1;
+				}
+				else {
+					return 0;
 				}
 			});
 
-			return sortedPeeps;
+			return processedPeeps;
 		}
 
 		function incrementUsedPeeps(peeps) {
@@ -345,7 +359,13 @@ angular.module('SupAppIonic')
 				console.log(message);
 
 				newEvent.peepsInvited.each(function(peep){
-					PhoneSrvc.sendMessage(peep.id, message);
+
+					ContactSrvc.getAllNumbers(peep, peep.id).then(function(numbers){
+						numbers.forEach(function(number){
+							console.log(number + ':' + message);
+							// PhoneSrvc.sendMessage(number, message);
+						});
+					});
 				});
 			}
 			

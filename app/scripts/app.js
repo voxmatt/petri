@@ -10,7 +10,7 @@ angular.module('SupAppIonic', [
     'angular-gestures'
   ])
 
-  .run(function ($ionicPlatform) {
+  .run(function ($ionicPlatform, NotificationSrvc) {
     $ionicPlatform.ready(function() {
       // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
       // for form inputs)
@@ -20,6 +20,10 @@ angular.module('SupAppIonic', [
       if(window.StatusBar) {
         // org.apache.cordova.statusbar required
         StatusBar.styleDefault();
+      }
+
+      if (window.plugins.pushNotification) {
+        NotificationSrvc.initPushServices();
       }
     });
   })
@@ -77,5 +81,23 @@ angular.module('SupAppIonic', [
   })
 
   .run(function(){
+  })
+
+  .filter('orderByKey', function() {
+    return function(items, field, reverse) {
+      var filtered = [];
+      angular.forEach(items, function(item) {
+        if (item && item[field]) {
+          filtered.push(item);
+        }
+      });
+      filtered.sort(function (a, b) {
+        return (a[field] > b[field] ? 1 : -1);
+      });
+      if(reverse) {
+        filtered.reverse();
+      }
+      return filtered;
+    };
   })
 ;

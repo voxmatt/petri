@@ -378,6 +378,44 @@ angular.module('SupAppIonic')
 			});
 		}
 
+		function getAllNumbers(contact, contactNumber) {
+			var d = $q.defer();
+			var numberSet = [];
+
+			// first check if this number is a dupe of something else
+			if (contact.isDupeOf && contact.isDupeOf.length) {
+				// capture the real contact's number in the numberset
+				numberSet.push(contact.isDupeOf);
+
+				// now get the real contact and get the dupe contacts off that
+				getContactByPhoneNumber(contact.isDupeOf).then(function(realContact){
+					var dupes = realContact.dupeNumbers || null;
+					if (dupes) {
+						for (var key in dupes) {
+							if (dupes.hasOwnProperty(key)){
+								numberSet.push(dupes[key]);
+							}
+						}
+					}
+					
+					d.resolve(numberSet);
+				});
+			} else if (contact.dupeNumbers) {
+				numberSet.push(contactNumber);
+
+				for (var key in contact.dupeNumbers) {
+					if (contact.dupeNumbers.hasOwnProperty(key)){
+						numberSet.push(contact.dupeNumbers[key]);
+					}
+				}
+				d.resolve(numberSet);
+			} else {
+				d.resolve([contactNumber]);
+			}
+
+			return d.promise;
+		}
+
 		return {
 			getDeviceContacts: getDeviceContacts,
 			getContacts: getContacts,
@@ -391,7 +429,8 @@ angular.module('SupAppIonic')
 			updateGlobalContactsBatch: updateGlobalContactsBatch,
 			saveContactsLocally: saveContactsLocally,
 			getContactsLocally: getContactsLocally,
-			updateContactsLocally: updateContactsLocally
+			updateContactsLocally: updateContactsLocally,
+			getAllNumbers: getAllNumbers
 		};
 	}
 );

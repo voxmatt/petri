@@ -53,7 +53,7 @@
     	<!-- Locations List -->
       <ion-list ng-if="step.num == 2">
       	<ion-item class="item item-input">
-				  <input type="text" placeholder="Search" ng-model="moreOptions.locationFilter" class="location-filter">
+				  <input type="text" placeholder="Find or create a location" ng-model="moreOptions.locationFilter" class="location-filter">
       	</ion-item>
       	<ion-item ng-repeat="item in moreOptions.options | filter:moreOptions.locationFilter" ng-click="selectOption(step.num, item)" class="item-avatar">
 					<div class="item-image">
@@ -63,6 +63,12 @@
           <span class="item-note">{{item.tempDistAway}}</span>
       		<p>{{item.location.address}}</p>
       	</ion-item>
+
+        <a ng-if="moreOptions.locationFilter" class="item item-icon-left" href="" ng-click="selectOption(step.num, moreOptions.locationFilter)">
+          <i class="icon ion-navigate"></i>
+          Create "{{moreOptions.locationFilter}}"
+        </a>
+
       </ion-list>
 			
 			<!-- People List -->

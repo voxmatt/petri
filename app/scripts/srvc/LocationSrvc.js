@@ -29,6 +29,11 @@ angular.module('SupAppIonic')
       return deferred.promise;
     }
 
+    function getLatLongLocally() {
+      var cache = JSON.parse(window.localStorage.lastLocation || null);
+      return cache.coords;
+    }
+
     function getFoursquareVenues(num, section, category, onlyOpen) {
       var deferred = $q.defer();
       var cache = JSON.parse(window.localStorage.foursquare || null);
@@ -279,12 +284,30 @@ angular.module('SupAppIonic')
       return timeOk && distanceOk;
     }
 
+    function createVenue(name) {
+      var d = $q.defer();
+      var location = {};
+      location.name = name;
+
+      getLatLong().then(function(coords){
+        location.location = {};
+        location.location.lat = coords.latitude;
+        location.location.long = coords.longitude;
+        d.resolve(location);
+      }, function(){
+        d.reject(location);
+      });
+      return d.promise;
+    }
+
     return {
       getLatLong: getLatLong,
+      getLatLongLocally: getLatLongLocally,
       getFoursquareVenues: getFoursquareVenues,
       getStaticDistanceAway: getStaticDistanceAway,
       cacheFoursquare: cacheFoursquare,
-      getDistanceBtwn: getDistanceBtwn
+      getDistanceBtwn: getDistanceBtwn,
+      createVenue: createVenue
     };
   }
 );

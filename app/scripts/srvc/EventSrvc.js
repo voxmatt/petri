@@ -4,7 +4,7 @@ angular.module('SupAppIonic')
 
 	.factory('EventSrvc', function($q, Firebase, UserSrvc) {
 
-		var eventHalfLife = 12; // in hours - change this here
+		var eventHalfLife = 3; // in hours - change this here
 
 		var ref = new Firebase('https://petri.firebaseio.com/events');
 
@@ -118,7 +118,8 @@ angular.module('SupAppIonic')
 					firstName: rawUser.firstName || '',
 					abbName: rawUser.firstName || '',
 					initials: rawUser.firstName[0] || ''
-				}
+				},
+				dupeNumbers: rawUser.dupeNumbers || null
 			};
 					
 			if (rawUser.lastName) {
