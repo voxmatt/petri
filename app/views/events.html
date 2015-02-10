@@ -34,6 +34,7 @@
   </ion-slide>
 
   <ion-slide>
+    <a href="#/logs" class="logs-label">logs</a>
     <div class="event-count">{{getNumberOfEvents()}}</div>
   </ion-slide>
 
@@ -78,10 +79,11 @@
       </div>
     </div> -->
 
-    <div hm-tap="editSheet(event)" class="orbit-circle orbit-circle-bottom">
+    <div hm-tap="editSheet(event)" class="orbit-circle orbit-circle-bottom orbit-circle-no-container">
       <div class="orbit-circle-rotate-correction">
           <div class="orbit-circle-content">
-            <i class="icon" ng-class="{'ion-edit':!createdEvent(), 'ion-ios-plus-outline': createdEvent}"></i>
+            <i class="icon ion-ios-personadd-outline"></i>
+            <i class="icon ion-ios-trash-outline" ng-if="createdEvent()"></i>
           </div>
       </div>
     </div>

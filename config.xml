@@ -27,9 +27,6 @@
     <feature name="InAppBrowser">
         <param name="ios-package" value="CDVInAppBrowser" />
     </feature>
-    <feature name="PushPlugin">
-      <param name="ios-package" value="PushPlugin" />
-    </feature>
 
     <platform name="ios">
         <!-- iOS 7.0+ -->

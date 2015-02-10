@@ -1,0 +1,14 @@
+<div class="logs">
+  <ion-header-bar>
+    <a href="#/events" class="button button-left button-petri">back</a>
+    <h1 class="title">Logs</h1>
+  </ion-header-bar>
+  <ion-content scroll="true" class="padding">
+    <div class="log-line" ng-repeat="log in logs | orderByKey: 'time':true | limitTo:50" ng-class="{'error':log.error}">
+      <div class="log-type">{{log.type}}</div>
+      <div class="log-user-name">{{log.user.firstName}} {{log.user.lastName}}</div>
+      <div class="log-message">{{log.message}}</div>
+      <div class="log-time">{{prettyDate(log.time)}}</div>
+    </div>
+  </ion-content>
+</div>

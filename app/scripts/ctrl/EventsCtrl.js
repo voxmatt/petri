@@ -1,14 +1,15 @@
 'use strict';
-/*global $, $, Firebase */
+/*global $, Firebase */
 
 angular.module('SupAppIonic')
-  .controller('EventsCtrl', function ($scope, $rootScope, $state, $stateParams, $location, $timeout, $firebase, $firebaseSimpleLogin, EventSrvc, $ionicSlideBoxDelegate, $cordovaDialogs, ContactSrvc, LocationSrvc, StateSrvc, $ionicActionSheet, UserSrvc) {
+  .controller('EventsCtrl', function ($scope, $rootScope, $state, $stateParams, $location, $timeout, $firebase, $firebaseSimpleLogin, EventSrvc, $ionicSlideBoxDelegate, $cordovaDialogs, ContactSrvc, LocationSrvc, StateSrvc, $ionicActionSheet, UserSrvc, LoggingSrvc) {
 
     ////////////////////////
     //        INIT        //
     ////////////////////////
 
     var viewingEvent = {};
+    var preEventSlides = 2;
     var currentUser = UserSrvc.getUserLocally();
     var draggingElm = {};
     var coords = null;
@@ -27,15 +28,33 @@ angular.module('SupAppIonic')
     syncedEvents.$loaded().then(function(){
       EventSrvc.removeOldEvents($scope.events);
       $ionicSlideBoxDelegate.update();
+      
+      // need to create a map of slide indexes to event keys
       var i = 0;
+      var keyArray = [];
       for (var key in $scope.events) {
+        // first create an array of keys
         if ($scope.events.hasOwnProperty(key) && key[0] !== '$') {
-          eventKeyMap[i + 2] = key;
+          keyArray.push(key);
           i++;
         }
       }
+      // now sort in descending order (because that's how events are sorted)
+      keyArray.sort(function(a, b){return b-a;});
+
+      // now they're in the same order as the slides, so we can map them
+      keyArray.forEach(function(key, i){
+        eventKeyMap[i + preEventSlides] = key;
+      });
+
       LocationSrvc.getLatLong().then(function(coordinates){
         coords = coordinates;
+      });
+
+      UserSrvc.getCurrentUser().then(function(user){
+        currentUser = user;
+        var logMsg = 'seen in app';
+        LoggingSrvc.addLog('online', user, logMsg, false);
       });
     });
     
@@ -107,10 +126,6 @@ angular.module('SupAppIonic')
 
     $scope.resetActionBtn = function(){
       angular.element('.action-button').css({'-webkit-transform': 'translate(0px, 0px)'});
-    };
-
-    $scope.eventViewingChanged = function(index) {
-      viewingEvent = $scope.events[index];
     };
 
     $scope.createdEvent = function () {
@@ -255,11 +270,14 @@ angular.module('SupAppIonic')
     function joinEvent() {
       if (viewingEvent.peeps) {
         viewingEvent.peeps.push(EventSrvc.getUserObjForEvent(currentUser));
+        LoggingSrvc.addLog('join', currentUser, 'joined event', false);
       }
     }
 
     function deleteEvent(passedEvent) {
       EventSrvc.removeEvent(passedEvent.key);
+
+      LoggingSrvc.addLog('delete', currentUser, 'deleted event', false);
 
       $state.transitionTo($state.current, $stateParams, {
         reload: true,

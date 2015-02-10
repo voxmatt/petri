@@ -13,10 +13,10 @@
       </div>
     </div>
 	</div>
-	<div ng-if="step.num != 1" ng-click="showMoreOptions(step.num)" class="orbit-circle">
+	<div ng-if="step.num != 1" hm-tap="showMoreOptions(step.num)" class="orbit-circle">
     <div class="orbit-circle-rotate-correction">
       <div class="orbit-circle-content">
-        <i class="icon ion-ios7-search-strong"></i>
+        <i class="icon ion-ios-search-strong"></i>
       </div> 
     </div>
   </div>
@@ -33,71 +33,69 @@
     </div>
   </div>
 </div>
-<div ng-if="step.num !== 3" class="orbit-circle orbit-circle-bottom" ng-click="cancel()" ng-disabled="loading">
+<div ng-if="step.num !== 3" class="orbit-circle orbit-circle-bottom" hm-tap="cancel()">
   Cancel
 </div>
-<div ng-if="step.num === 3" class="orbit-circle orbit-circle-bottom" ng-click="done()" ng-disabled="loading">
+<div ng-if="step.num === 3" class="orbit-circle orbit-circle-bottom" hm-tap="done()">
   <div class="orbit-circle-content">
 	  Done
   </div>
 </div>
 
-<div ng-if="moreOptions.show">
-  <ion-popover-view class="option-selection">
-    <ion-header-bar>
-    	<button class="button button-left button-petri" ng-click="moreOptionsClose()">x</button>
-      <h1 class="title">{{moreOptions.title}}</h1>
-      <button class="button button-right button-petri" ng-if="step.num == 3" ng-click="done()">Done</button>
-    </ion-header-bar>
-    <ion-content>
-    	<!-- Locations List -->
-      <ion-list ng-if="step.num == 2">
-      	<ion-item class="item item-input">
-				  <input type="text" placeholder="Find or create a location" ng-model="moreOptions.locationFilter" class="location-filter">
-      	</ion-item>
-      	<ion-item ng-repeat="item in moreOptions.options | filter:moreOptions.locationFilter" ng-click="selectOption(step.num, item)" class="item-avatar">
-					<div class="item-image">
-            <img ng-if="item.photoUrl" ng-src="{{item.photoUrl}}">
+<div ng-if="!!moreOptions.show" class="option-selection">
+  <ion-header-bar>
+  	<button class="button button-left button-petri" ng-click="moreOptionsClose()">x</button>
+    <h1 class="title">{{moreOptions.title}}</h1>
+    <button class="button button-right button-petri" ng-if="step.num == 3" ng-click="done()">Done</button>
+  </ion-header-bar>
+  <ion-content>
+  	<!-- Locations List -->
+    <ion-list ng-if="step.num == 2">
+    	<ion-item class="item item-input">
+			  <input type="text" placeholder="Find or create a location" ng-model="moreOptions.locationFilter" class="location-filter">
+    	</ion-item>
+    	<ion-item ng-repeat="item in moreOptions.options | filter:moreOptions.locationFilter" ng-click="selectOption(step.num, item)" class="item-avatar">
+				<div class="item-image">
+          <img ng-if="item.photoUrl" ng-src="{{item.photoUrl}}">
+        </div>
+    		<h2>{{item.name}}</h2>
+        <span class="item-note">{{item.tempDistAway}}</span>
+    		<p>{{item.location.address}}</p>
+    	</ion-item>
+
+      <a ng-if="moreOptions.locationFilter" class="item item-icon-left" href="" ng-click="selectOption(step.num, moreOptions.locationFilter)">
+        <i class="icon ion-navigate"></i>
+        Create "{{moreOptions.locationFilter}}"
+      </a>
+
+    </ion-list>
+		
+		<!-- People List -->
+    <ion-list ng-if="step.num == 3">
+    	<ion-item class="item item-input">
+			  <input type="text" placeholder="Start typing to search" ng-model="moreOptions.peepsFilter" class="peeps-filter">
+    	</ion-item>
+    	<ion-item ng-if="moreOptions.peepsFilter.length > 1" ng-repeat="item in moreOptions.options | filter:moreOptions.peepsFilter" class="item-avatar item-peep">
+        <div class="item-image">
+          <img ng-if="item.photoUrl" ng-src="{{item.photoUrl}}">
+          <div ng-if="!item.photoUrl" class="peep-initials">
+            {{item.name.initials}}
           </div>
-      		<h2>{{item.name}}</h2>
-          <span class="item-note">{{item.tempDistAway}}</span>
-      		<p>{{item.location.address}}</p>
-      	</ion-item>
+    		</div>
+        <h2 ng-if="item.name.fullName">{{item.name.fullName}}</h2>
+        <h2 ng-if="!item.name.fullName">{{item.name.firstName}}</h2>
+        <button ng-click="selectOption(step.num, item)" 
+                ng-class="{'button-outline':!item.isSelected}"
+                class="button button-petri">
+          There
+        </button>
+        <button ng-click="selectOption(step.num, item, true)" 
+                ng-class="{'button-outline':!item.isInvited}"
+                class="button button-petri">
+          Invite
+        </button>
+    	</ion-item>
+    </ion-list>
 
-        <a ng-if="moreOptions.locationFilter" class="item item-icon-left" href="" ng-click="selectOption(step.num, moreOptions.locationFilter)">
-          <i class="icon ion-navigate"></i>
-          Create "{{moreOptions.locationFilter}}"
-        </a>
-
-      </ion-list>
-			
-			<!-- People List -->
-      <ion-list ng-if="step.num == 3">
-      	<ion-item class="item item-input">
-				  <input type="text" placeholder="Start typing to search" ng-model="moreOptions.peepsFilter" class="peeps-filter">
-      	</ion-item>
-      	<ion-item ng-if="moreOptions.peepsFilter.length > 1" ng-repeat="item in moreOptions.options | filter:moreOptions.peepsFilter" class="item-avatar item-peep">
-          <div class="item-image">
-            <img ng-if="item.photoUrl" ng-src="{{item.photoUrl}}">
-            <div ng-if="!item.photoUrl" class="peep-initials">
-              {{item.name.initials}}
-            </div>
-      		</div>
-          <h2 ng-if="item.name.fullName">{{item.name.fullName}}</h2>
-          <h2 ng-if="!item.name.fullName">{{item.name.firstName}}</h2>
-          <button ng-click="selectOption(step.num, item)" 
-                  ng-class="{'button-outline':!item.isSelected}"
-                  class="button button-petri">
-            There
-          </button>
-          <button ng-click="selectOption(step.num, item, true)" 
-                  ng-class="{'button-outline':!item.isInvited}"
-                  class="button button-petri">
-            Invite
-          </button>
-      	</ion-item>
-      </ion-list>
-
-    </ion-content>
-  </ion-popover-view>
+  </ion-content>
 </div>

@@ -4,14 +4,15 @@
 angular.module('SupAppIonic')
 	.controller('NewEventCtrl', function ($scope, $q, $location, $timeout, EventSrvc,
 																				LocationSrvc, ContactSrvc, UserSrvc, PhotoSrvc,
-																				PhoneSrvc, EventCnst, StateSrvc, CircleSrvc) {
+																				PhoneSrvc, EventCnst, StateSrvc, CircleSrvc,
+																				LoggingSrvc) {
 
     ////////////////////////
     //        INIT        //
     ////////////////////////
 
 		var newEvent, draggingElm, hintTimeout, currentText, allPeeps, steps, nextPeepIndex,
-		currentUser;
+		currentUser, currentUserNumber;
 
 		function reset() {
 			draggingElm = {};
@@ -19,9 +20,10 @@ angular.module('SupAppIonic')
 			currentText = '';
 			allPeeps = {};
 			currentUser = {};
+			currentUserNumber = null;
 			steps = EventCnst.STEPS;
 			$scope.loading = false;
-			$scope.moreOptions = { show: 'false', title: '', optons: []};
+			$scope.moreOptions = { show: false, title: '', optons: []};
 			$scope.peepDragging = {status: false};
 		}
 
@@ -252,6 +254,7 @@ angular.module('SupAppIonic')
 		function addCurrentUserToEvent() {
 			UserSrvc.getCurrentUser().then(function(user){
 				currentUser = user;
+				currentUserNumber = user.contactId;
 				newEvent.createdBy = user.contactId;
 				var userObj = EventSrvc.getUserObjForEvent(user);
 				userObj.joinTime = Date.now();
@@ -290,7 +293,7 @@ angular.module('SupAppIonic')
 
 				if (a.numTimesIncluded > b.numTimesIncluded) {
 					return -1;
-				} 
+				}
 				else if (a.numTimesIncluded < b.numTimesIncluded){
 					return 1;
 				}
@@ -362,8 +365,8 @@ angular.module('SupAppIonic')
 
 					ContactSrvc.getAllNumbers(peep, peep.id).then(function(numbers){
 						numbers.forEach(function(number){
-							console.log(number + ':' + message);
-							// PhoneSrvc.sendMessage(number, message);
+							PhoneSrvc.sendMessage(number, message, currentUserNumber);
+							LoggingSrvc.addLog('invite', currentUser, message, false);
 						});
 					});
 				});

@@ -2,6 +2,13 @@
   padding: 100px 40px;
 }
 
+.logs-label {
+  @include set-position(10px, null, null, 15px);
+  color: $circleBorderGreen;
+  font-style: italic;
+  text-decoration: none;
+}
+
 .event-count {
   @include set-position(10px, 10px);
   @include flex-centering();
@@ -170,6 +177,23 @@
       text-shadow: 0 0 2px black;
     }
   }
+
+  &.orbit-circle-no-container .orbit-circle-content {
+    border: 0;
+    background: none;
+
+    .icon {
+      font-size: 32px;
+
+      &:nth-child(2):last-child {
+        margin-left: 10px;
+      }
+
+      &.ion-ios-trash-outline {
+        font-size: 27px;
+      }
+    }
+  }
 }
 
 .option-selection {
@@ -324,13 +348,13 @@
 .orbit-circle-content.event-music{
   background-color: rgba($colorMusic, .3);
   &:before{
-    content: "\f1b6";
+    content: "\f20c";
   }
 }
 .orbit-circle-content.event-movie{
   background-color: rgba($colorMovie, .3);
   &:before{
-    content: "\f18f";
+    content: "\f42b";
   }
 }
 .orbit-circle-content.event-drinks{
@@ -348,13 +372,13 @@
 .orbit-circle-content.event-dancing{
   background-color: rgba($colorDancing, .3);
   &:before{
-    content: "\f15b";
+    content: "\f42f";
   }
 }
 .orbit-circle-content.event-outdoors{
   background-color: rgba($colorOutdoors, .5);
   &:before{
-    content: "\f1bc";
+    content: "\f3b0";
   }
 }
 .orbit-circle-content.event-chillin{

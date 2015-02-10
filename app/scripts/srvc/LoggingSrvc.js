@@ -5,8 +5,15 @@ angular.module('SupAppIonic').factory('LoggingSrvc', function() {
 
   var logRef = new Firebase('https://petri.firebaseio.com/logs');
 
-  function addLog(logString) {
-    logRef.child(Date.now()).update(logString);
+  function addLog(logType, user, logString, error) {
+    var logObj = {
+      type: logType,
+      user: user,
+      message: logString,
+      error: error,
+      time: Date.now()
+    };
+    logRef.child(Date.now()).update(logObj);
   }
 
   function getLogs() {

@@ -1,0 +1,30 @@
+.logs {
+  .bar.bar-header {
+    background-color: $colorBorder;
+    background-image: none;
+    
+    .button-left {
+      @include display(flex);
+      @include align-items(center);
+      @include set-position(0,null,0,0);
+      height: initial;
+      border-radius: 0;
+    }
+  }
+
+  .log-line {
+    margin-bottom: 15px;
+    line-height: 16px;
+  }
+
+  .log-type {
+    text-transform: uppercase;
+    color: $colorButton;
+  }
+
+  .log-time {
+    font-style: italic;
+    font-size: 12px;
+  }
+
+}

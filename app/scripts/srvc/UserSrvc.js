@@ -142,6 +142,25 @@ angular.module('SupAppIonic')
 			return JSON.parse(window.localStorage.user || '{}');
 		}
 
+		// this really isn't good to use in the longer run...
+		function getAllUserNumbers() {
+			var d = $q.defer();
+			var numbers = [];
+			myRef.on('value', function(snapshot) {
+				if (snapshot) {
+					var users = snapshot.val();
+					for (var key in users) {
+						if (users.hasOwnProperty(key) && users[key].contactId) {
+							numbers.push(users[key].contactId);
+						}
+					}
+					d.resolve(numbers);
+				}
+			});
+
+			return d.promise;
+		}
+
 		return {
 			currentUser: currentUser,
 			setCurrentUserId: setCurrentUserId,
@@ -154,7 +173,8 @@ angular.module('SupAppIonic')
 			userRegistrationComplete: userRegistrationComplete,
 			saveCurrentUserData: saveCurrentUserData,
 			updateUserLocally: updateUserLocally,
-			getUserLocally: getUserLocally
+			getUserLocally: getUserLocally,
+			getAllUserNumbers: getAllUserNumbers
 		};
 	})
 ;

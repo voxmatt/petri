@@ -1,5 +1,9 @@
 'use strict';
 
+////////////////////
+//   NOT IN USE   //
+////////////////////
+
 angular.module('SupAppIonic').factory('NotificationSrvc', function(){
   var NotificationSrvc = {};
   var pushNotification;
@@ -36,7 +40,7 @@ angular.module('SupAppIonic').factory('NotificationSrvc', function(){
   }
 
   function tokenHandler(result) {
-    console.log(result);
+    console.log('device token = ' + result);
   }
 
   function successHandler(result) {
@@ -46,6 +50,6 @@ angular.module('SupAppIonic').factory('NotificationSrvc', function(){
   function errorHandler(error) {
     console.log(error);
   }
-
+ 
   return NotificationSrvc;
 });

@@ -2,6 +2,7 @@
 /*global cordova, StatusBar*/
 
 angular.module('SupAppIonic', [
+    'ngAnimate',
     'ionic',
     'config',
     'ngCordova',
@@ -10,21 +11,19 @@ angular.module('SupAppIonic', [
     'angular-gestures'
   ])
 
-  .run(function ($ionicPlatform, NotificationSrvc) {
+  .run(function ($ionicPlatform) {
     $ionicPlatform.ready(function() {
       // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
       // for form inputs)
       if(window.cordova && window.cordova.plugins.Keyboard) {
         cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
       }
+      
       if(window.StatusBar) {
         // org.apache.cordova.statusbar required
         StatusBar.styleDefault();
       }
 
-      if (window.plugins.pushNotification) {
-        NotificationSrvc.initPushServices();
-      }
     });
   })
 
@@ -75,6 +74,13 @@ angular.module('SupAppIonic', [
         url: '/edit-event/:id/:step',
         templateUrl: 'views/new-event.html',
         controller: 'NewEventCtrl'
+      })
+
+      .state('logs', {
+        authRequired: true,
+        url: '/logs',
+        templateUrl: 'views/logs.html',
+        controller: 'LogsCtrl'
       })
 
     ;
