@@ -174,11 +174,11 @@ angular.module('SupAppIonic')
 		$scope.done = function() {
 			$scope.loading = true;
 			$scope.moreOptions.show = false;
-			EventSrvc.saveEvent(newEvent).then(function(){
+			EventSrvc.saveEvent(newEvent).then(function(eventId){
 				$scope.loading = false;
 				$location.url('/events');
 				incrementUsedPeeps(newEvent.peeps);
-				sendInvites(newEvent);
+				sendInvites(newEvent, eventId);
 			}, function(error) {
 				console.log(error);
 			});
@@ -306,7 +306,6 @@ angular.module('SupAppIonic')
 		}
 
 		function incrementUsedPeeps(peeps) {
-
 			peeps.each(function(peep){
 				ContactSrvc.getContactByPhoneNumber(peep.id).then(function(peepObj){
 					if (peepObj) {
@@ -318,62 +317,97 @@ angular.module('SupAppIonic')
 			});
 		}
 
-		function sendInvites(newEvent) {
+		function sendInvites(newEvent, eventId) {
+			
 			if (newEvent.peepsInvited && newEvent.peepsInvited.length && currentUser.firstName && currentUser.lastName) {
-				var message = currentUser.firstName + ' ' + currentUser.lastName + ' wants to know if you want to join him';
+				var userFullName = currentUser.firstName + ' ' + currentUser.lastName;
+				var inviteesText = '';
+				
+				var inviteMessage = userFullName + ' wants to know if you want to join him';
+				var notifMessage = userFullName;
+
+				var appUrl = 'petri://event?=' + eventId;
+				var webUrl = 'http://petri.firebase.com/event?=' + eventId;
 
 				if (newEvent.peeps.length > 1) {
 					var num = newEvent.peeps.length;
 					newEvent.peeps.each(function(peep, index){
 						if (index !== 0) {
 							if (num === 2 || num === index + 1) {
-								message += ' and ';
+								inviteesText += ' and ';
 							} else {
-								message += ', ';
+								inviteesText += ', ';
 							}
 
 							if (peep.name.fullName) {
-								message += peep.name.fullName;
+								inviteesText += peep.name.fullName;
 							}
 						}
 					});
 				}
+
+				inviteMessage += inviteesText;
+				notifMessage += inviteesText;
 
 				switch (newEvent.type) {
 					case 'Music':
 					case 'Drinks':
 					case 'Food':
 					case 'Dancin\'':
-						message += ' for some ' + newEvent.type.toLowerCase();
+						inviteMessage += ' for some ' + newEvent.type.toLowerCase();
+						notifMessage += ' are going out for ' + newEvent.type.toLowerCase();
 						break;
 					case 'Movie':
-						message += ' for a movie';
+						inviteMessage += ' for a movie';
+						notifMessage += ' are going to see a movie';
 						break;
 					case 'Out doors':
-						message += ' to hang outdoors';
+						inviteMessage += ' to hang outdoors';
+						notifMessage += ' are going to hang outdoors';
 						break;
 					case 'Chillin\'':
-						message += ' to hang out';
+						inviteMessage += ' to hang out';
+						notifMessage += ' are going to hang out';
 						break;
 				}
 
-				message += ' at ' + newEvent.location.name + '.';
+				inviteMessage += ' at ' + newEvent.location.name + '.';
+				notifMessage += ' at ' + newEvent.location.name + '.' + ' Check it out: ' + appUrl;
 
-				console.log(message);
+				sortPeepsAndUsers(newEvent.peepsInvited).then(function(sortedPeeps){
 
-				newEvent.peepsInvited.each(function(peep){
+					sortedPeeps.nonRegInvite.each(function(peep){
+						var nonRegInviteText = inviteMessage + ' Respond here: ' + webUrl;
 
-					ContactSrvc.getAllNumbers(peep, peep.id).then(function(numbers){
-						numbers.forEach(function(number){
-							PhoneSrvc.sendMessage(number, message, currentUserNumber);
-							LoggingSrvc.addLog('invite', currentUser, message, false);
+						ContactSrvc.getAllNumbers(peep, peep.id).then(function(numbers){
+							numbers.forEach(function(number){
+								PhoneSrvc.sendMessage(number, nonRegInviteText, currentUserNumber);
+								LoggingSrvc.addLog('invite', currentUser, nonRegInviteText, false);
+								console.log(nonRegInviteText);
+							});
 						});
+					});
+
+					sortedPeeps.regInvite.each(function(peep){
+						var regInviteText = inviteMessage + ' Check it out: ' + appUrl;
+
+						ContactSrvc.getAllNumbers(peep, peep.id).then(function(numbers){
+							numbers.forEach(function(number){
+								PhoneSrvc.sendMessage(number, regInviteText, currentUserNumber);
+								LoggingSrvc.addLog('invite', currentUser, regInviteText, false);
+								console.log(regInviteText);
+							});
+						});
+					});
+
+					sortedPeeps.reg.each(function(user){
+						PhoneSrvc.sendMessage(user.contactId, notifMessage, currentUserNumber);
+						console.log(notifMessage);
 					});
 				});
 			}
 			
 		}
-
 
 		function swapOutPeep(peep) {
 			// warning: can only be used when on the peeps step
@@ -382,5 +416,40 @@ angular.module('SupAppIonic')
 			$scope.step.options.add(allPeeps[nextPeepIndex], peepIndex);
 			nextPeepIndex++;
 		}
+
+		function sortPeepsAndUsers(peepsInvited) {
+			var d = $q.defer();
+			var nonRegInvite = angular.copy(peepsInvited);
+			var regInvite = [];
+			var reg = [];
+
+			UserSrvc.getRegisteredUsers().then(function(users){
+				users.each(function(user){
+					var userInvited = false;
+
+					peepsInvited.each(function(peep, index) {
+						if (parseInt(peep.id) === parseInt(user.contactId)) {
+							regInvite.push(peep);
+							nonRegInvite.splice(index, 1);
+						}
+					});
+
+					if (!userInvited) {
+						reg.push(user);
+					}
+				});
+
+				var result = {
+					nonRegInvite: nonRegInvite,
+					regInvite: regInvite,
+					reg: reg
+				};
+
+				d.resolve(result);
+			});
+
+			return d.promise;
+		}
+
 	})
 ;

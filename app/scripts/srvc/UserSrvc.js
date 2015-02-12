@@ -143,22 +143,51 @@ angular.module('SupAppIonic')
 		}
 
 		// this really isn't good to use in the longer run...
-		function getAllUserNumbers() {
+		function getAllUsers() {
 			var d = $q.defer();
-			var numbers = [];
+			
 			myRef.on('value', function(snapshot) {
 				if (snapshot) {
-					var users = snapshot.val();
-					for (var key in users) {
-						if (users.hasOwnProperty(key) && users[key].contactId) {
-							numbers.push(users[key].contactId);
-						}
-					}
-					d.resolve(numbers);
+					d.resolve(snapshot.val());
+				} else {
+					d.reject('error');
 				}
 			});
 
 			return d.promise;
+		}
+
+		function getAllUserNumbers() {
+			var d = $q.defer();
+			var numbers = [];
+
+			getAllUsers().then(function(users){
+				for (var key in users) {
+					if (users.hasOwnProperty(key) && users[key].contactId) {
+						numbers.push(users[key].contactId);
+					}
+				}
+				d.resolve(numbers);
+			});
+
+			return d.promise;
+		}
+
+		function getRegisteredUsers() {
+			var d = $q.defer();
+			var registeredUsers = [];
+
+			getAllUsers().then(function(users){
+				for (var key in users) {
+					if (users.hasOwnProperty(key) && users[key].registered) {
+						registeredUsers.push(users[key]);
+					}
+				}
+				d.resolve(registeredUsers);
+			});
+
+			return d.promise;
+
 		}
 
 		return {
@@ -174,7 +203,8 @@ angular.module('SupAppIonic')
 			saveCurrentUserData: saveCurrentUserData,
 			updateUserLocally: updateUserLocally,
 			getUserLocally: getUserLocally,
-			getAllUserNumbers: getAllUserNumbers
+			getAllUserNumbers: getAllUserNumbers,
+			getRegisteredUsers: getRegisteredUsers
 		};
 	})
 ;

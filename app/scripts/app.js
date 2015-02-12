@@ -1,4 +1,5 @@
 'use strict';
+/* jshint unused: false */
 /*global cordova, StatusBar*/
 
 angular.module('SupAppIonic', [
@@ -11,19 +12,39 @@ angular.module('SupAppIonic', [
     'angular-gestures'
   ])
 
-  .run(function ($ionicPlatform) {
+  .run(function ($ionicPlatform, $window, $state, StateSrvc) {
     $ionicPlatform.ready(function() {
       // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
       // for form inputs)
-      if(window.cordova && window.cordova.plugins.Keyboard) {
+      if (window.cordova && window.cordova.plugins.Keyboard) {
         cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
       }
+
+      if (window.cordova) {
+        navigator.geolocation.getCurrentPosition();
+      }
       
-      if(window.StatusBar) {
+      if (window.StatusBar) {
         // org.apache.cordova.statusbar required
         StatusBar.styleDefault();
       }
 
+    });
+
+    $window.addEventListener('PertiCustomUrl', function(e) {
+      var url = e.detail.url;
+
+      if (url.split('petri://').length > 1 ) {
+        // NOTE, THIS WILL BREAK REAL FAST IF URLS ARE USED FOR MORE THAN EVENT IDS
+        var eventId = url.split('event?=')[1];
+        
+        if (eventId) {
+          StateSrvc.setViewingEventId(eventId);
+          $state.go('events');
+        } else {
+          $state.go('events');
+        }
+      }
     });
   })
 
@@ -86,9 +107,6 @@ angular.module('SupAppIonic', [
     ;
   })
 
-  .run(function(){
-  })
-
   .filter('orderByKey', function() {
     return function(items, field, reverse) {
       var filtered = [];
@@ -107,3 +125,10 @@ angular.module('SupAppIonic', [
     };
   })
 ;
+
+function handleOpenURL(url) {
+  var event = new CustomEvent('PertiCustomUrl', {detail: {'url': url}});
+  setTimeout(function() {
+    window.dispatchEvent(event);
+  }, 0 );
+}

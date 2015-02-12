@@ -2,7 +2,11 @@
 /*global $, Firebase */
 
 angular.module('SupAppIonic')
-  .controller('EventsCtrl', function ($scope, $rootScope, $state, $stateParams, $location, $timeout, $firebase, $firebaseSimpleLogin, EventSrvc, $ionicSlideBoxDelegate, $cordovaDialogs, ContactSrvc, LocationSrvc, StateSrvc, $ionicActionSheet, UserSrvc, LoggingSrvc) {
+  .controller('EventsCtrl', function ($scope, $rootScope, $state, $stateParams, $location,
+                                      $timeout, $firebase, $firebaseSimpleLogin, EventSrvc,
+                                      $ionicSlideBoxDelegate, $cordovaDialogs, ContactSrvc,
+                                      LocationSrvc, StateSrvc, $ionicActionSheet, UserSrvc,
+                                      LoggingSrvc) {
 
     ////////////////////////
     //        INIT        //
@@ -15,6 +19,7 @@ angular.module('SupAppIonic')
     var coords = null;
     var hintTimeout = null;
     var eventKeyMap = {};
+    var eventIndexMap = {};
     $scope.eventShown = 1;
     $scope.activeSlide = 1;
     $scope.user = currentUser || null;
@@ -45,11 +50,23 @@ angular.module('SupAppIonic')
       // now they're in the same order as the slides, so we can map them
       keyArray.forEach(function(key, i){
         eventKeyMap[i + preEventSlides] = key;
+        eventIndexMap[key] = i + preEventSlides;
       });
 
       LocationSrvc.getLatLong().then(function(coordinates){
         coords = coordinates;
       });
+
+      var eventId = StateSrvc.getViewingEventId();
+
+      console.log(eventId);
+
+      if (eventId) {
+        var index = eventIndexMap[eventId];
+        if (index) {
+          $scope.activeSlide = index;
+        }
+      }
 
       UserSrvc.getCurrentUser().then(function(user){
         currentUser = user;

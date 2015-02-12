@@ -36,7 +36,7 @@ angular.module('SupAppIonic')
 				if (error) {
 					deferred.reject(error);
 				} else {
-					deferred.resolve(cleanEvent);
+					deferred.resolve(key);
 				}
 			});
 
