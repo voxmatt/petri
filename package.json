@@ -31,7 +31,7 @@
     "jshint-stylish": "~0.1.3",
     "load-grunt-tasks": "~0.2.0",
     "time-grunt": "~0.2.1",
-    "cordova": "~3.5.0-0.2.6",
+    "cordova": "~4.2.0",
     "lodash": "~2.4.1",
     "ripple-emulator": "~0.9.23"
   },

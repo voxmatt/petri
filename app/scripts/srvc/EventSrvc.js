@@ -20,6 +20,18 @@ angular.module('SupAppIonic')
 			return deferred.promise;
 		}
 
+		function getEvent(id){
+			var d = $q.defer();
+
+			ref.child(id).on('value', function(snapshot) {
+				d.resolve(snapshot.val());
+			}, function(error) {
+				d.reject(error);
+			});
+
+			return d.promise;
+		}
+
 		function saveEvent(newEvent){
 
 			var deferred = $q.defer();
@@ -135,6 +147,7 @@ angular.module('SupAppIonic')
 
 		return {
 			getEvents: getEvents,
+			getEvent: getEvent,
 			saveEvent: saveEvent,
 			updateEvent: updateEvent,
 			removeEvent: removeEvent,

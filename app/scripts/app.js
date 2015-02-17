@@ -104,6 +104,13 @@ angular.module('SupAppIonic', [
         controller: 'LogsCtrl'
       })
 
+      .state('inviteResponse', {
+        authRequired: false,
+        url: '/respond/:eventId/:contactId',
+        templateUrl: 'views/invite-response.html',
+        controller: 'InviteResponseCtrl'
+      })
+
     ;
   })
 
