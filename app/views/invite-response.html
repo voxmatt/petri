@@ -1,6 +1,82 @@
-<ion-content scroll="false" class="list ">
+<div class="respond-container">
+  
+  <h1 class="event-header">
+    <span ng-if="!ready || !eventObj || !peep">
+      PETRI
+    </span>
+    <span ng-if="ready && eventObj && peep">
+      {{ eventObj.location.name }}
+    </span>
+  </h1>
 
-	{{eventId}}
-	{{contactId}}
+  <!-- LOADING -->
+  <div class="respond-content" loading="!ready"></div>
+  
+  <!-- EVENT NOT FOUND -->
+  <div class="respond-content talign-center" ng-if="ready && !eventObj">
+    <h3 class="padding">Sorry, but it looks like everyone has scattered</h3>
+    <p class="padding">Petri is like real life: no one sticks in the same place forever. Be sure to check out invites as soon as you get them.<p>
+  </div>
 
-</ion-content>
+  <!-- CONTACT NOT FOUND -->
+  <div class="respond-content talign-center" ng-if="ready && eventObj && !peep">
+    <h3 class="padding">Sorry, but we can't find your invite</h3>
+    <p class="padding">Double check the link you got and try again.<p>
+  </div>
+
+  <!-- GOOD TO GO -->
+  <div class="respond-content talign-center" ng-if="ready && eventObj && peep">
+
+    <div class="orbit-circle-container contains-{{eventObj.peeps.length}}-orbit-circles">
+      <div class="orbit-circle" ng-repeat="peep in eventObj.peeps">
+        <div class="orbit-circle-rotate-correction">
+          <div class="orbit-circle-content">
+            {{peep.name.abbName}}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="primary-circle">
+      <h1>{{eventObj.type}}</h1>
+      <span class="event-time-ago">started {{getTimeAgo(eventObj.key)}}</span>
+      <img ng-if="eventObj.location.photoUrl" ng-src="{{eventObj.location.photoUrl}}" class="event-location-photo">
+    </div>
+    <a ng-href="{{mapsLink}}" class="orbit-circle orbit-circle-bottom" target="_blank">
+      <div class="orbit-circle-content">
+        <i class="ion-ios-location-outline"></i>
+        <div>map</div>
+      </div>
+    </a>
+
+    <div ng-if="!peepThere" ng-click="respondYes()" class="action-button button-one">
+      join
+    </div>
+
+    <div ng-if="!peepThere" ng-click="respondNo()" class="action-button button-two">
+      pass
+    </div>
+
+    <div ng-if="peepThere" class="already-there">
+      you've already joined
+    </div>
+  </div>
+
+  <div ng-if="confirmation.show" class="confirmation">
+    <div ng-if="confirmation.type === 'accepted'" class="confirmation-content">
+      <h3 class="padding">Awesome!</h3>
+      <h3>We've let everyone know that you're on your way</h3>
+      <a ng-href="{{mapsLink}}"target="_blank">
+        get directions to {{ eventObj.location.name }}
+      </a>
+    </div>
+
+    <div ng-if="confirmation.type === 'passed'" class="confirmation-content">
+      <h3 class="padding">Awww...</h3>
+      <h3>We let everyone know you can't make it, but if you change your mind, just revisit this page.</h3>
+      <a href="" ng-click="confirmation.show = false">
+        well, let me reconsider...
+      </a>
+    </div>
+  </div>
+  
+<div>

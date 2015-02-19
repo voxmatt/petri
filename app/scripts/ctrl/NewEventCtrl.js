@@ -12,7 +12,7 @@ angular.module('SupAppIonic')
     ////////////////////////
 
 		var newEvent, draggingElm, hintTimeout, currentText, allPeeps, steps, nextPeepIndex,
-		currentUser, currentUserNumber;
+		currentUser, currentUserNumber, existingEvent;
 
 		function reset() {
 			draggingElm = {};
@@ -21,6 +21,7 @@ angular.module('SupAppIonic')
 			allPeeps = {};
 			currentUser = {};
 			currentUserNumber = null;
+			existingEvent = null;
 			steps = EventCnst.STEPS;
 			$scope.loading = false;
 			$scope.moreOptions = { show: false, title: '', optons: []};
@@ -31,6 +32,7 @@ angular.module('SupAppIonic')
 
 			reset();
 			newEvent = StateSrvc.getEditingEvent();
+			existingEvent = newEvent && angular.copy(newEvent);
 
 			if (newEvent && newEvent.location) {
 				$scope.step = steps.PEEPS;
@@ -178,7 +180,9 @@ angular.module('SupAppIonic')
 				$scope.loading = false;
 				$location.url('/events');
 				incrementUsedPeeps(newEvent.peeps);
-				sendInvites(newEvent, eventId);
+				
+				sendInvites(newEvent, eventId, existingEvent);
+
 			}, function(error) {
 				console.log(error);
 			});
@@ -317,17 +321,17 @@ angular.module('SupAppIonic')
 			});
 		}
 
-		function sendInvites(newEvent, eventId) {
+		function sendInvites(newEvent, eventId, existingEvent) {
 			
-			if (newEvent.peepsInvited && newEvent.peepsInvited.length && currentUser.firstName && currentUser.lastName) {
+			if (currentUser.firstName && currentUser.lastName) {
 				var userFullName = currentUser.firstName + ' ' + currentUser.lastName;
 				var inviteesText = '';
 				
-				var inviteMessage = userFullName + ' wants to know if you want to join him';
+				var inviteMessage = userFullName;
 				var notifMessage = userFullName;
 
 				var appUrl = 'petri://event?=' + eventId;
-				var webUrl = 'http://petri.firebase.com/event?=' + eventId;
+				var webUrl = 'https://petri.firebaseapp.com/#/respond/' + eventId;
 
 				if (newEvent.peeps.length > 1) {
 					var num = newEvent.peeps.length;
@@ -346,7 +350,7 @@ angular.module('SupAppIonic')
 					});
 				}
 
-				inviteMessage += inviteesText;
+				inviteMessage += inviteesText + ' want you to join';
 				notifMessage += inviteesText;
 
 				switch (newEvent.type) {
@@ -362,11 +366,11 @@ angular.module('SupAppIonic')
 						notifMessage += ' are going to see a movie';
 						break;
 					case 'Out doors':
-						inviteMessage += ' to hang outdoors';
+						inviteMessage += ' up to hang outdoors';
 						notifMessage += ' are going to hang outdoors';
 						break;
 					case 'Chillin\'':
-						inviteMessage += ' to hang out';
+						inviteMessage += ' up to hang out';
 						notifMessage += ' are going to hang out';
 						break;
 				}
@@ -374,36 +378,42 @@ angular.module('SupAppIonic')
 				inviteMessage += ' at ' + newEvent.location.name + '.';
 				notifMessage += ' at ' + newEvent.location.name + '.' + ' Check it out: ' + appUrl;
 
-				sortPeepsAndUsers(newEvent.peepsInvited).then(function(sortedPeeps){
+				sortPeepsAndUsers(newEvent.peepsInvited, existingEvent).then(function(sortedPeeps){
 
-					sortedPeeps.nonRegInvite.each(function(peep){
-						var nonRegInviteText = inviteMessage + ' Respond here: ' + webUrl;
+					if (sortedPeeps.nonRegInvite && sortedPeeps.nonRegInvite.length) {
+						sortedPeeps.nonRegInvite.each(function(peep){
+							var nonRegInviteText = inviteMessage + ' Respond here: ' + webUrl + '/' + peep.id;
 
-						ContactSrvc.getAllNumbers(peep, peep.id).then(function(numbers){
-							numbers.forEach(function(number){
-								PhoneSrvc.sendMessage(number, nonRegInviteText, currentUserNumber);
-								LoggingSrvc.addLog('invite', currentUser, nonRegInviteText, false);
-								console.log(nonRegInviteText);
+							ContactSrvc.getAllNumbers(peep, peep.id).then(function(numbers){
+								numbers.forEach(function(number){
+									PhoneSrvc.sendMessage(number, nonRegInviteText, currentUserNumber);
+									LoggingSrvc.addLog('invite', currentUser, nonRegInviteText, false);
+									console.log(nonRegInviteText);
+								});
 							});
 						});
-					});
+					}
 
-					sortedPeeps.regInvite.each(function(peep){
-						var regInviteText = inviteMessage + ' Check it out: ' + appUrl;
+					if (sortedPeeps.regInvite && sortedPeeps.regInvite.length) {
+						sortedPeeps.regInvite.each(function(peep){
+							var regInviteText = inviteMessage + ' Check it out: ' + appUrl;
 
-						ContactSrvc.getAllNumbers(peep, peep.id).then(function(numbers){
-							numbers.forEach(function(number){
-								PhoneSrvc.sendMessage(number, regInviteText, currentUserNumber);
-								LoggingSrvc.addLog('invite', currentUser, regInviteText, false);
-								console.log(regInviteText);
+							ContactSrvc.getAllNumbers(peep, peep.id).then(function(numbers){
+								numbers.forEach(function(number){
+									PhoneSrvc.sendMessage(number, regInviteText, currentUserNumber);
+									LoggingSrvc.addLog('invite', currentUser, regInviteText, false);
+									console.log(regInviteText);
+								});
 							});
 						});
-					});
+					}
 
-					sortedPeeps.reg.each(function(user){
-						PhoneSrvc.sendMessage(user.contactId, notifMessage, currentUserNumber);
-						console.log(notifMessage);
-					});
+					if (!existingEvent) {
+						sortedPeeps.reg.each(function(user){
+							PhoneSrvc.sendMessage(user.contactId, notifMessage, currentUserNumber);
+							console.log(notifMessage);
+						});
+					}
 				});
 			}
 			
@@ -417,17 +427,28 @@ angular.module('SupAppIonic')
 			nextPeepIndex++;
 		}
 
-		function sortPeepsAndUsers(peepsInvited) {
+		function sortPeepsAndUsers(peepsInvited, existingEvent) {
 			var d = $q.defer();
 			var nonRegInvite = angular.copy(peepsInvited);
 			var regInvite = [];
 			var reg = [];
 
+			// if we're augmenting an existing events, only send invites for newly added peeps
+			if (existingEvent && existingEvent.peepsInvited && nonRegInvite.length) {
+				existingEvent.peepsInvited.each(function (peepInvited) {
+					nonRegInvite.each(function(invitee, index){
+						if (peepInvited.id === invitee.id) {
+							nonRegInvite.splice(index, 1);
+						}
+					});
+				});
+			}
+
 			UserSrvc.getRegisteredUsers().then(function(users){
 				users.each(function(user){
 					var userInvited = false;
 
-					peepsInvited.each(function(peep, index) {
+					nonRegInvite.each(function(peep, index) {
 						if (parseInt(peep.id) === parseInt(user.contactId)) {
 							regInvite.push(peep);
 							nonRegInvite.splice(index, 1);
