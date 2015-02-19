@@ -1,6 +1,6 @@
 {
   "firebase": "petri",
-  "public": "app",
+  "public": "www",
   "ignore": [
     "firebase.json",
     "**/.*",

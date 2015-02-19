@@ -1,0 +1,96 @@
+.respond-container {
+  @include display(flex);
+  @include flex-direction(column);
+  @include align-items(center);
+  height: 100%;
+
+  h1.event-header {
+    white-space: initial;
+  }
+
+  .confirmation {
+    @include display(flex);
+    @include align-items(center);
+    @include flex-direction(column);
+    @include justify-content(center);
+    @include set-position(0,0,0,0);
+    text-align: center;
+    padding: 50px;
+    z-index: 50;
+    background: black;
+
+    a {
+      display: block;
+      color: #2B5C5C;
+      font-size: 18px;
+      line-height: 26px;
+      margin-top: 40px;
+    }
+  }
+}
+
+.respond-content {
+  height: 100%;
+  width: 100%;
+  padding: 20px;
+
+  .primary-circle {
+    z-index: 5;
+
+    .event-time-ago {
+      line-height: 12px;
+    }
+
+    img {
+      opacity: .5;
+    }
+  }
+
+  .orbit-circle.orbit-circle-bottom .orbit-circle-content {
+    padding-top: 10px;
+    display: initial;
+    text-transform: lowercase;
+    font-weight: 400;
+    border: none;
+
+    i {
+      font-size: 24px;
+    }
+  }
+
+  .action-button {
+    @include display(flex);
+    @include align-items(center);
+    @include justify-content(center);
+    font-size: 18px;
+    display: flex;
+    justify-content: center;
+    text-transform: uppercase;
+    align-items: center;
+    font-weight: 400;
+
+    &:before { 
+      content: '';
+    }
+
+    &.button-one {
+      left: 25%;
+      background: rgba(43, 254, 195, 0.2);
+    }
+
+    &.button-two {
+      right: 25%;
+      background: rgba(255,255,255,.15);
+      border-color: #555;
+    }
+  }
+
+  .already-there{
+    position: absolute;
+    bottom: 40px;
+    text-transform: uppercase;
+    left: 0;
+    text-align: center;
+    right: 0;
+  }
+}
