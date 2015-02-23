@@ -7,6 +7,7 @@ angular.module('SupAppIonic')
 		function sendMessage(number, text, from) {
 			var d = $q.defer();
 			var code = text;
+			console.log(text);
 			var link = 'https://api.tropo.com/1.0/sessions\?action\=create\&token\=2583fc9bd52af0479a9c0fa3d5e9afd1946c13c8917a1b684cec633c53b9bed8d6a8ca1aec8e688e7edcf48b\&num\=' + number + '\&code\=' + code; // jshint ignore:line
 			
 			if (from) {

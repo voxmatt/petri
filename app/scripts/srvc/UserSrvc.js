@@ -8,9 +8,11 @@ angular.module('SupAppIonic')
 		// Manage User in LocalStorage //
 		/////////////////////////////////
 		var currentUser = {};
+		var currentUserId;
 		var myRef = new Firebase('https://petri.firebaseio.com/users');
 		
 		$rootScope.$on('$firebaseSimpleLogin:login', function(event, user) {
+			currentUserId = user.id;
 			getUser(user.id).then(function(user){
 				setLocalStorageUser(user);
 				currentUser = user;
@@ -38,10 +40,12 @@ angular.module('SupAppIonic')
 		}
 
 		function getCurrentUser() {
+
 			if (currentUser.contactId) {
 				return $q.when(currentUser);
 			}
-			return getUser(currentUser.id);
+
+			return getUser(currentUserId);
 		}
 
 		function getUser(userId) {

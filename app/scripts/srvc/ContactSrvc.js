@@ -416,6 +416,16 @@ angular.module('SupAppIonic')
 			return d.promise;
 		}
 
+		function incrementContactUsedCount(contact) {
+			getContactByPhoneNumber(contact.id).then(function(contactObj){
+				if (contactObj) {
+					contactObj.numTimesIncluded = contactObj.numTimesIncluded || 0;
+					contactObj.numTimesIncluded++;
+					updateContact(contactObj, contact.id);
+				}
+			});
+		}
+
 		return {
 			getDeviceContacts: getDeviceContacts,
 			getContacts: getContacts,
@@ -430,7 +440,8 @@ angular.module('SupAppIonic')
 			saveContactsLocally: saveContactsLocally,
 			getContactsLocally: getContactsLocally,
 			updateContactsLocally: updateContactsLocally,
-			getAllNumbers: getAllNumbers
+			getAllNumbers: getAllNumbers,
+			incrementContactUsedCount: incrementContactUsedCount
 		};
 	}
 );

@@ -2,7 +2,7 @@
 
 angular.module('SupAppIonic')
 
-	.factory('EventSrvc', function($q, Firebase, UserSrvc) {
+	.factory('EventSrvc', function($q, Firebase, UserSrvc, PhoneSrvc, LoggingSrvc) {
 
 		var eventHalfLife = 3; // in hours - change this here
 
@@ -145,6 +145,126 @@ angular.module('SupAppIonic')
 			return userObj;
 		}
 
+		////////////////////////
+		//	Sending Invites		//
+		////////////////////////
+
+		function sendInvites(eventObj, eventId, isEditingExisting, adding, inviting, currentUser, registeredNumbers) {
+
+			var inviteTexts = getInviteTexts(eventObj, adding, eventId);
+
+			if (inviting && inviting.length) {
+
+				inviting.forEach(function(invitee){
+					var text = inviteTexts.reg;
+
+					if (!invitee.registered) {
+						text = inviteTexts.nonReg + invitee.id;
+					}
+
+					invitee.numbers.forEach(function(number){
+						PhoneSrvc.sendMessage(number, text, currentUser.contactId);
+						LoggingSrvc.addLog('invite', currentUser, text, false);
+					});
+
+				});
+
+			}
+
+			if (isEditingExisting && adding && adding.length) {
+				var text = inviteTexts.join;
+
+				eventObj.peeps.forEach(function(peep){
+					if (adding.indexOf(peep) !== -1) {
+						return;
+					}
+
+					peep.numbers.forEach(function(number){
+						PhoneSrvc.sendMessage(number, text, currentUser.contactId);
+						LoggingSrvc.addLog('join', currentUser, text, false);
+					});
+				});
+			}
+
+			if (!isEditingExisting) {
+				registeredNumbers.forEach(function(number) {
+					PhoneSrvc.sendMessage(number, inviteTexts.notif, currentUser.contactId);
+				});
+			}
+		}
+
+		function getListOfPeepsText(peeps) {
+			var text = '';
+			var num = peeps.length;
+
+			peeps.each(function(peep, index) {
+				if (peep.name.fullName) {
+					text += peep.name.fullName;
+				}
+
+				if (index === num -1) {
+					// last one, do nothing
+				} else if (index === num - 2) {
+					// second to last, need an 'and'
+					text += (num === 2) ? ' and ' : ', and ';
+				} else if (index !== num) {
+					// otherwise, it's comma time
+					text += ', ';
+				}
+			});
+
+			return text;
+		}
+
+		function getInviteTexts(eventObj, adding, eventId) {
+			
+			var inviteMessage, notifMessage, joinMessage;
+			var appUrl = 'petri://event?=' + eventId;
+			var webUrl = 'https://petri.firebaseapp.com/#/respond/' + eventId;
+
+			if (eventObj.peeps.length > 1) {
+				inviteMessage = getListOfPeepsText(eventObj.peeps) + ' want you to join';
+				notifMessage = getListOfPeepsText(eventObj.peeps);
+			}
+
+			if (adding && adding.length) {
+				var isAre = (adding.length > 1) ? ' are ' : ' is ';
+				joinMessage = getListOfPeepsText(adding) + isAre + 'joining you at ' + eventObj.location.name;
+			}
+
+			switch (eventObj.type) {
+				case 'Music':
+				case 'Drinks':
+				case 'Food':
+				case 'Dancin\'':
+					inviteMessage += ' for some ' + eventObj.type.toLowerCase();
+					notifMessage += ' are going out for ' + eventObj.type.toLowerCase();
+					break;
+				case 'Movie':
+					inviteMessage += ' for a movie';
+					notifMessage += ' are going to see a movie';
+					break;
+				case 'Out doors':
+					inviteMessage += ' up to hang outdoors';
+					notifMessage += ' are going to hang outdoors';
+					break;
+				case 'Chillin\'':
+					inviteMessage += ' up to hang out';
+					notifMessage += ' are going to hang out';
+					break;
+			}
+
+			inviteMessage += ' at ' + eventObj.location.name + '.';
+			notifMessage += ' at ' + eventObj.location.name + '.' + ' Check it out: ' + appUrl;
+
+			return {
+				reg: inviteMessage + ' Check it out: ' + appUrl,
+				nonReg: inviteMessage + ' Respond here: ' + webUrl + '/',
+				notif: notifMessage,
+				join: joinMessage
+			};
+		}
+
 		return {
 			getEvents: getEvents,
 			getEvent: getEvent,
@@ -153,7 +273,8 @@ angular.module('SupAppIonic')
 			removeEvent: removeEvent,
 			removeOldEvents: removeOldEvents,
 			addUserToEvent: addUserToEvent,
-			getUserObjForEvent: getUserObjForEvent
+			getUserObjForEvent: getUserObjForEvent,
+			sendInvites: sendInvites
 		};
 	}
 );

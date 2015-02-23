@@ -12,7 +12,7 @@ angular.module('SupAppIonic')
     ////////////////////////
 
 		var newEvent, draggingElm, hintTimeout, currentText, allPeeps, steps, nextPeepIndex,
-		currentUser, currentUserNumber, existingEvent;
+		currentUser, currentUserNumber, editingEvent, registeredNumbers, peepsAdding, peepsInviting;
 
 		function reset() {
 			draggingElm = {};
@@ -21,22 +21,26 @@ angular.module('SupAppIonic')
 			allPeeps = {};
 			currentUser = {};
 			currentUserNumber = null;
-			existingEvent = null;
+			editingEvent = false;
 			steps = EventCnst.STEPS;
 			$scope.loading = false;
 			$scope.moreOptions = { show: false, title: '', optons: []};
 			$scope.peepDragging = {status: false};
+
+			registeredNumbers = [];
+			peepsAdding = [];
+			peepsInviting = [];
 		}
 
 		(function init() {
 
 			reset();
 			newEvent = StateSrvc.getEditingEvent();
-			existingEvent = newEvent && angular.copy(newEvent);
 
 			if (newEvent && newEvent.location) {
 				$scope.step = steps.PEEPS;
 				$scope.loading = true;
+				editingEvent = true;
 
 				ContactSrvc.getContacts().then(function(contacts){
 					if (newEvent.peeps) {
@@ -58,7 +62,7 @@ angular.module('SupAppIonic')
 					$scope.moreOptions.show = false;
 					$scope.step = newStep;
 				}, function(){
-					console.log('failed to get contacts');
+					LoggingSrvc.addLog('new event', null, 'failed to get contacts', true);
 				}).finally(function(){
 					$scope.loading = false;
 				});
@@ -66,6 +70,19 @@ angular.module('SupAppIonic')
 				newEvent = {};
 				$scope.step = steps.TYPE;
 			}
+
+			// make sure we have the current user
+			UserSrvc.getCurrentUser().then(function(user){
+				currentUser = user;
+				currentUserNumber = user.contactId;
+			}, function() {
+				LoggingSrvc.addLog('new event', currentUser, 'failed to get current user', true);
+			});
+
+			// get the numbers for registered users, we'll need them
+			UserSrvc.getAllUserNumbers().then(function(numbersArray){
+				registeredNumbers = numbersArray;
+			});
 
 		})();
 
@@ -85,13 +102,13 @@ angular.module('SupAppIonic')
 
 					$scope.moreOptions.show = false;
 					$scope.step = newStep;
-				}, function(error){
-					console.log(error);
+				}, function(){
+					LoggingSrvc.addLog('new event', currentUser, 'failed to get location', true);
 				}).finally(function(){
 					$scope.loading = false;
 				});
 
-				addCurrentUserToEvent();
+				addCurrentUserToEvent(newEvent);
 
 			} else if (num === 2){
 				$scope.loading = true;
@@ -115,7 +132,7 @@ angular.module('SupAppIonic')
 					$scope.moreOptions.show = false;
 					$scope.step = newStep;
 				}, function(){
-					console.log('failed to get contacts');
+					LoggingSrvc.addLog('new event', currentUser, 'failed to get contacts', true);
 				}).finally(function(){
 					$scope.loading = false;
 				});
@@ -123,21 +140,29 @@ angular.module('SupAppIonic')
 			} else if (num === 3) {
 
 				if (option.isSelected && !isInvite) {
-					option.isSelected = false;
-					newEvent.peeps.remove(option);
+				
+					// if the peep is already selected, and this isn't an invite click
+					// then they're being removed from the event
+					removePeepFromEvent(newEvent, option);
+				
 				} else if (option.isInvited && isInvite) {
-					option.isInvited = false;
-					newEvent.peepsInvited.remove(option);
+					
+					// if the peep is already invited, and this is an invite clcik
+					// then they're being removed from the invite list
+					removePeepFromInvited(newEvent, option);
+
 				} else if (isInvite) {
+				
+					// if the peep is neither invited, nor selected and this is an invite click
+					// then they're being invited
+					addPeepToInvited(newEvent, option);
 					option.isInvited = true;
-					option.inviteTime = Date.now();
-					newEvent.peepsInvited.add(option);
-					swapOutPeep(option);
+				
 				} else {
-					option.isSelected = true;
-					option.joinTime = Date.now();
-					newEvent.peeps.add(option);
-					swapOutPeep(option);
+				
+					// otherwise, they're being added to the event
+					addPeepToEvent(newEvent, option);
+				
 				}
 			}
 		};
@@ -154,8 +179,8 @@ angular.module('SupAppIonic')
 						title: 'Where To?',
 						options: result.locations
 					};
-				}, function(error){
-					console.log(error);
+				}, function(){
+					LoggingSrvc.addLog('new event', currentUser, 'failed to get location', true);
 				});
 
 			} else if (stepNum === 3) {
@@ -176,16 +201,20 @@ angular.module('SupAppIonic')
 		$scope.done = function() {
 			$scope.loading = true;
 			$scope.moreOptions.show = false;
+
+			markRegisteredPeeps(peepsAdding, peepsInviting);
+
 			EventSrvc.saveEvent(newEvent).then(function(eventId){
 				$scope.loading = false;
 				$location.url('/events');
 				incrementUsedPeeps(newEvent.peeps);
 				
-				sendInvites(newEvent, eventId, existingEvent);
+				EventSrvc.sendInvites(newEvent, eventId, editingEvent, peepsAdding, peepsInviting, currentUser, registeredNumbers);
 
-			}, function(error) {
-				console.log(error);
+			}, function() {
+				LoggingSrvc.addLog('new event', currentUser, 'failed to save event', true);
 			});
+
 		};
 
 		$scope.moreOptionsClose = function() {
@@ -255,18 +284,58 @@ angular.module('SupAppIonic')
 			}
 		};
 
-		function addCurrentUserToEvent() {
-			UserSrvc.getCurrentUser().then(function(user){
-				currentUser = user;
-				currentUserNumber = user.contactId;
-				newEvent.createdBy = user.contactId;
-				var userObj = EventSrvc.getUserObjForEvent(user);
-				userObj.joinTime = Date.now();
-				newEvent.peeps = [ userObj ];
-				newEvent.peepsInvited = [];
-			}, function(error) {
-				console.log(error);
+		function removePeepFromEvent(event, peep) {
+			peep.isSelected = false;
+			event.peeps.remove(peep);
+
+			if (peepsAdding.indexOf(peep) !== -1) {
+				peepsAdding.splice(peep, 1);
+			}
+		}
+
+		function addPeepToEvent(event, peep) {
+			peep.isSelected = true;
+			peep.joinTime = Date.now();
+			peep.addedBy = currentUser.contactId;
+			event.peeps.add(peep);
+			peepsAdding.push(peep);
+			swapOutPeep(peep);
+
+			ContactSrvc.getAllNumbers(peep, peep.id).then(function(numbers){
+				peep.numbers = numbers;
 			});
+		}
+
+		function removePeepFromInvited(event, peep) {
+			peep.isInvited = false;
+			event.peepsInvited.remove(peep);
+
+			if (peepsInviting.indexOf(peep) !== -1) {
+				peepsInviting.splice(peep, 1);
+			}
+		}
+
+		function addPeepToInvited(event, peep) {
+			peep.isInvited = true;
+			peep.inviteTime = Date.now();
+			peep.invitedBy = currentUser.contactId;
+			event.peepsInvited.add(peep);
+			peepsInviting.push(peep);
+			swapOutPeep(peep);
+
+			ContactSrvc.getAllNumbers(peep, peep.id).then(function(numbers){
+				peep.numbers = numbers;
+			});
+		}
+
+		function addCurrentUserToEvent(event) {
+			var userObj = EventSrvc.getUserObjForEvent(currentUser);
+			userObj.joinTime = Date.now();
+			userObj.numbers = [ currentUser.contactId ];
+			userObj.registered = true;
+			event.createdBy = currentUser.contactId;
+			event.peeps = [ userObj ];
+			event.peepsInvited = [];
 		}
 
 		function processPeeps(peeps) {
@@ -311,112 +380,8 @@ angular.module('SupAppIonic')
 
 		function incrementUsedPeeps(peeps) {
 			peeps.each(function(peep){
-				ContactSrvc.getContactByPhoneNumber(peep.id).then(function(peepObj){
-					if (peepObj) {
-						peepObj.numTimesIncluded = peepObj.numTimesIncluded || 0;
-						peepObj.numTimesIncluded++;
-						ContactSrvc.updateContact(peepObj, peep.id);
-					}
-				});
+				ContactSrvc.incrementContactUsedCount(peep);
 			});
-		}
-
-		function sendInvites(newEvent, eventId, existingEvent) {
-			
-			if (currentUser.firstName && currentUser.lastName) {
-				var userFullName = currentUser.firstName + ' ' + currentUser.lastName;
-				var inviteesText = '';
-				
-				var inviteMessage = userFullName;
-				var notifMessage = userFullName;
-
-				var appUrl = 'petri://event?=' + eventId;
-				var webUrl = 'https://petri.firebaseapp.com/#/respond/' + eventId;
-
-				if (newEvent.peeps.length > 1) {
-					var num = newEvent.peeps.length;
-					newEvent.peeps.each(function(peep, index){
-						if (index !== 0) {
-							if (num === 2 || num === index + 1) {
-								inviteesText += ' and ';
-							} else {
-								inviteesText += ', ';
-							}
-
-							if (peep.name.fullName) {
-								inviteesText += peep.name.fullName;
-							}
-						}
-					});
-				}
-
-				inviteMessage += inviteesText + ' want you to join';
-				notifMessage += inviteesText;
-
-				switch (newEvent.type) {
-					case 'Music':
-					case 'Drinks':
-					case 'Food':
-					case 'Dancin\'':
-						inviteMessage += ' for some ' + newEvent.type.toLowerCase();
-						notifMessage += ' are going out for ' + newEvent.type.toLowerCase();
-						break;
-					case 'Movie':
-						inviteMessage += ' for a movie';
-						notifMessage += ' are going to see a movie';
-						break;
-					case 'Out doors':
-						inviteMessage += ' up to hang outdoors';
-						notifMessage += ' are going to hang outdoors';
-						break;
-					case 'Chillin\'':
-						inviteMessage += ' up to hang out';
-						notifMessage += ' are going to hang out';
-						break;
-				}
-
-				inviteMessage += ' at ' + newEvent.location.name + '.';
-				notifMessage += ' at ' + newEvent.location.name + '.' + ' Check it out: ' + appUrl;
-
-				sortPeepsAndUsers(newEvent.peepsInvited, existingEvent).then(function(sortedPeeps){
-
-					if (sortedPeeps.nonRegInvite && sortedPeeps.nonRegInvite.length) {
-						sortedPeeps.nonRegInvite.each(function(peep){
-							var nonRegInviteText = inviteMessage + ' Respond here: ' + webUrl + '/' + peep.id;
-
-							ContactSrvc.getAllNumbers(peep, peep.id).then(function(numbers){
-								numbers.forEach(function(number){
-									PhoneSrvc.sendMessage(number, nonRegInviteText, currentUserNumber);
-									LoggingSrvc.addLog('invite', currentUser, nonRegInviteText, false);
-									console.log(nonRegInviteText);
-								});
-							});
-						});
-					}
-
-					if (sortedPeeps.regInvite && sortedPeeps.regInvite.length) {
-						sortedPeeps.regInvite.each(function(peep){
-							var regInviteText = inviteMessage + ' Check it out: ' + appUrl;
-
-							ContactSrvc.getAllNumbers(peep, peep.id).then(function(numbers){
-								numbers.forEach(function(number){
-									PhoneSrvc.sendMessage(number, regInviteText, currentUserNumber);
-									LoggingSrvc.addLog('invite', currentUser, regInviteText, false);
-									console.log(regInviteText);
-								});
-							});
-						});
-					}
-
-					if (!existingEvent) {
-						sortedPeeps.reg.each(function(user){
-							PhoneSrvc.sendMessage(user.contactId, notifMessage, currentUserNumber);
-							console.log(notifMessage);
-						});
-					}
-				});
-			}
-			
 		}
 
 		function swapOutPeep(peep) {
@@ -427,50 +392,22 @@ angular.module('SupAppIonic')
 			nextPeepIndex++;
 		}
 
-		function sortPeepsAndUsers(peepsInvited, existingEvent) {
-			var d = $q.defer();
-			var nonRegInvite = angular.copy(peepsInvited);
-			var regInvite = [];
-			var reg = [];
+		function markRegisteredPeeps(added, invited) {
 
-			// if we're augmenting an existing events, only send invites for newly added peeps
-			if (existingEvent && existingEvent.peepsInvited && nonRegInvite.length) {
-				existingEvent.peepsInvited.each(function (peepInvited) {
-					nonRegInvite.each(function(invitee, index){
-						if (peepInvited.id === invitee.id) {
-							nonRegInvite.splice(index, 1);
-						}
-					});
-				});
-			}
+			var peeps = added.concat(invited);
 
-			UserSrvc.getRegisteredUsers().then(function(users){
-				users.each(function(user){
-					var userInvited = false;
+			peeps.forEach(function(peep){
 
-					nonRegInvite.each(function(peep, index) {
-						if (parseInt(peep.id) === parseInt(user.contactId)) {
-							regInvite.push(peep);
-							nonRegInvite.splice(index, 1);
-						}
-					});
+				if (peep.registered) {
+					return;
+				}
 
-					if (!userInvited) {
-						reg.push(user);
+				peep.numbers.forEach(function(number){
+					if (registeredNumbers.indexOf(parseInt(number)) !== -1 ) {
+						peep.registered = true;
 					}
 				});
-
-				var result = {
-					nonRegInvite: nonRegInvite,
-					regInvite: regInvite,
-					reg: reg
-				};
-
-				d.resolve(result);
 			});
-
-			return d.promise;
 		}
-
 	})
 ;

@@ -108,8 +108,10 @@ angular.module('SupAppIonic')
         type: 'passed'
       };
 
-      // let inviter know that invitee passed
-      // requires recording who invited when invited
+      if ($scope.peep.invitedBy) {
+        var text = $scope.peep.firstName + ' said they can\'t make it to ' + $scope.eventObj.location.name;
+        PhoneSrvc.sendMessage($scope.peep.invitedBy, text, $scope.peep.invitedBy);
+      }
     };
 
     $scope.respondYes = function () {
@@ -118,8 +120,8 @@ angular.module('SupAppIonic')
         type: 'accepted'
       };
 
+      EventSrvc.sendInvites($scope.eventObj, eventId, true, [ $scope.peep ], null, $scope.peep, null);
       addPeepAndSaveEvent($scope.eventObj, $scope.peep);
-      notifyEveryoneOfJoin($scope.eventObj, $scope.peep);
     };
 
 
@@ -129,27 +131,5 @@ angular.module('SupAppIonic')
       EventSrvc.updateEvent(eventId, angular.copy(event));
       LoggingSrvc.addLog('join', peep, 'joined event', false);
     }
-
-    function notifyEveryoneOfJoin(event, peep) {
-      var text = peep.name.fullName || peep.name.firstName;
-      text += ' just said that they\'re going to join you at ' + event.location.name;
-      
-      event.peeps.each(function(){
-        ContactSrvc.getAllNumbers(peep, peep.id).then(function(numbers){
-          numbers.forEach(function(number){
-            PhoneSrvc.sendMessage(number, text, peep.id);
-          });
-        });
-      });
-    }
-
-    // function getOrganizer(event) {
-    //   var id = event.createdBy;
-    //   var organizer = event.peeps.find(function(peep) {
-    //     return peep.id.toString() === id.toString();
-    //   });
-
-    //   return organizer;
-    // }
   })
 ;
