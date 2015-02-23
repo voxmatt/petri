@@ -26,9 +26,7 @@ angular.module('SupAppIonic')
 		$rootScope.$on('userDefined', function(event, user){
       var status = user && user.registered || $scope.user && $scope.user.registered || false;
 
-      if (status === false) {
-        $scope.loginObj.$logout();
-      } else if(status === true) {
+      if(status === true) {
 				$location.url('/events');
 			} else if (status === 'addTel') {
 				$scope.step = steps[1];

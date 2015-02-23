@@ -188,30 +188,44 @@ angular.module('SupAppIonic')
 
 			if (!isEditingExisting) {
 				registeredNumbers.forEach(function(number) {
+
+					if (parseInt(currentUser.contactId) === number) {
+						return;
+					}
+
 					PhoneSrvc.sendMessage(number, inviteTexts.notif, currentUser.contactId);
 				});
 			}
 		}
 
-		function getListOfPeepsText(peeps) {
+		function getListOfPeepsText(peeps, useSimple) {
 			var text = '';
 			var num = peeps.length;
 
-			peeps.each(function(peep, index) {
-				if (peep.name.fullName) {
-					text += peep.name.fullName;
+			if (useSimple) {
+				text += peeps[0].name.fullname;
+
+				if (peeps.length > 1) {
+					text += ' (+ ' + (peeps.length - 1) + ' more)';
 				}
 
-				if (index === num -1) {
-					// last one, do nothing
-				} else if (index === num - 2) {
-					// second to last, need an 'and'
-					text += (num === 2) ? ' and ' : ', and ';
-				} else if (index !== num) {
-					// otherwise, it's comma time
-					text += ', ';
-				}
-			});
+			} else {
+				peeps.each(function(peep, index) {
+					if (peep.name.fullName) {
+						text += peep.name.fullName;
+					}
+
+					if (index === num -1) {
+						// last one, do nothing
+					} else if (index === num - 2) {
+						// second to last, need an 'and'
+						text += (num === 2) ? ' and ' : ', and ';
+					} else if (index !== num) {
+						// otherwise, it's comma time
+						text += ', ';
+					}
+				});
+			}
 
 			return text;
 		}
@@ -222,14 +236,15 @@ angular.module('SupAppIonic')
 			var appUrl = 'petri://event?=' + eventId;
 			var webUrl = 'https://petri.firebaseapp.com/#/respond/' + eventId;
 
-			if (eventObj.peeps.length > 1) {
-				inviteMessage = getListOfPeepsText(eventObj.peeps) + ' want you to join';
-				notifMessage = getListOfPeepsText(eventObj.peeps);
+			if (eventObj.peeps && eventObj.peeps.length) {
+				// var inviteIsAre = (eventObj.peeps.length > 1) ? ' are ' : ' is ';
+				inviteMessage = getListOfPeepsText(eventObj.peeps, true) + ' wants you to ';
+				notifMessage = getListOfPeepsText(eventObj.peeps, true);
 			}
 
 			if (adding && adding.length) {
-				var isAre = (adding.length > 1) ? ' are ' : ' is ';
-				joinMessage = getListOfPeepsText(adding) + isAre + 'joining you at ' + eventObj.location.name;
+				// var joinIsAre = (adding.length > 1) ? ' are ' : ' is ';
+				joinMessage = getListOfPeepsText(adding, true) + ' is joining you at ' + eventObj.location.name;
 			}
 
 			switch (eventObj.type) {
@@ -237,29 +252,28 @@ angular.module('SupAppIonic')
 				case 'Drinks':
 				case 'Food':
 				case 'Dancin\'':
-					inviteMessage += ' for some ' + eventObj.type.toLowerCase();
-					notifMessage += ' are going out for ' + eventObj.type.toLowerCase();
+					inviteMessage += 'join for some ' + eventObj.type.toLowerCase();
+					notifMessage += 'going out for ' + eventObj.type.toLowerCase();
 					break;
 				case 'Movie':
-					inviteMessage += ' for a movie';
-					notifMessage += ' are going to see a movie';
+					inviteMessage += 'join for a movie';
+					notifMessage += 'going to see a movie';
 					break;
 				case 'Out doors':
-					inviteMessage += ' up to hang outdoors';
-					notifMessage += ' are going to hang outdoors';
+					inviteMessage += 'hang outdoors';
+					notifMessage += 'going to hang outdoors';
 					break;
 				case 'Chillin\'':
-					inviteMessage += ' up to hang out';
-					notifMessage += ' are going to hang out';
+					inviteMessage += 'hang out';
+					notifMessage += 'going to hang out';
 					break;
 			}
 
-			inviteMessage += ' at ' + eventObj.location.name + '.';
-			notifMessage += ' at ' + eventObj.location.name + '.' + ' Check it out: ' + appUrl;
+			notifMessage += + ' ' + appUrl;
 
 			return {
 				reg: inviteMessage + ' Check it out: ' + appUrl,
-				nonReg: inviteMessage + ' Respond here: ' + webUrl + '/',
+				nonReg: inviteMessage + ' Respond: ' + webUrl + '/',
 				notif: notifMessage,
 				join: joinMessage
 			};

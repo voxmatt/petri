@@ -60,29 +60,30 @@
   }
 
   .action-button {
-    @include display(flex);
-    @include align-items(center);
-    @include justify-content(center);
     font-size: 18px;
-    display: flex;
-    justify-content: center;
-    text-transform: uppercase;
-    align-items: center;
     font-weight: 400;
 
     &:before { 
       content: '';
+      margin: 0;
     }
 
     &.button-one {
       left: 25%;
       background: rgba(43, 254, 195, 0.2);
+
+      &:before {
+        content: 'JOIN'
+      }
     }
 
     &.button-two {
       right: 25%;
       background: rgba(255,255,255,.15);
       border-color: #555;
+      &:before {
+        content: 'PASS'
+      }
     }
   }
 

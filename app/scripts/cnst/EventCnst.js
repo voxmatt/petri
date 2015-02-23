@@ -73,7 +73,7 @@
     PEEPS: {
       key: 'peeps',
       num: 3,
-      text: 'With who?'
+      text: 'With whom?'
     },
     SAVING: {
       key: 'saving',

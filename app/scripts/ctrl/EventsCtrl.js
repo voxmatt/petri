@@ -30,6 +30,10 @@ angular.module('SupAppIonic')
     var syncedEvents = sync.$asObject();
     syncedEvents.$bindTo($scope, 'events');
 
+    syncedEvents.$watch(function(){
+      $ionicSlideBoxDelegate.update();
+    });
+
     syncedEvents.$loaded().then(function(){
       EventSrvc.removeOldEvents($scope.events);
       $ionicSlideBoxDelegate.update();
