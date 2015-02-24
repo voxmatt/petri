@@ -103,13 +103,18 @@ angular.module('SupAppIonic')
     };
 
     $scope.respondNo = function () {
+      var name = $scope.peep.fullName || $scope.peep.firstName;
+      var locName = $scope.eventObj && $scope.eventObj.location && $scope.eventObj.location.name || '';
+      var text = name + ' said they can\'t make it to ' + locName;
+      
       $scope.confirmation = {
         show: true,
         type: 'passed'
       };
 
+      LoggingSrvc.addLog('invite', $scope.peep, text, false);
+
       if ($scope.peep.invitedBy) {
-        var text = $scope.peep.firstName + ' said they can\'t make it to ' + $scope.eventObj.location.name;
         PhoneSrvc.sendMessage($scope.peep.invitedBy, text, $scope.peep.invitedBy);
       }
     };
