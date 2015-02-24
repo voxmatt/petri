@@ -203,7 +203,7 @@ angular.module('SupAppIonic')
 			var num = peeps.length;
 
 			if (useSimple) {
-				text += peeps[0].name.fullname;
+				text += peeps[0].name.fullName;
 
 				if (peeps.length > 1) {
 					text += ' (+ ' + (peeps.length - 1) + ' more)';
@@ -269,11 +269,11 @@ angular.module('SupAppIonic')
 					break;
 			}
 
-			notifMessage += + ' ' + appUrl;
+			notifMessage += '. Check it out: ' + appUrl;
 
 			return {
-				reg: inviteMessage + ' Check it out: ' + appUrl,
-				nonReg: inviteMessage + ' Respond: ' + webUrl + '/',
+				reg: inviteMessage + '. Join: ' + appUrl,
+				nonReg: inviteMessage + '. Respond: ' + webUrl + '/',
 				notif: notifMessage,
 				join: joinMessage
 			};

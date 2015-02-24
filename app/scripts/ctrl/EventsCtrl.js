@@ -290,8 +290,16 @@ angular.module('SupAppIonic')
 
     function joinEvent() {
       if (viewingEvent.peeps) {
-        viewingEvent.peeps.push(EventSrvc.getUserObjForEvent(currentUser));
+        var peep = EventSrvc.getUserObjForEvent(currentUser);
+        peep.registered = true;
+        viewingEvent.peeps.push(peep);
         LoggingSrvc.addLog('join', currentUser, 'joined event', false);
+
+        UserSrvc.getRegisteredUsers().then(function(numbers){
+          EventSrvc.sendInvites(viewingEvent, [peep], [],  true, [], currentUser, numbers);
+        }, function(){
+          LoggingSrvc.addLog('notification', currentUser, 'failed to get registered user numbers', true);
+        });
       }
     }
 
