@@ -239,7 +239,7 @@ angular.module('SupAppIonic')
 			if (eventObj.peeps && eventObj.peeps.length) {
 				// var inviteIsAre = (eventObj.peeps.length > 1) ? ' are ' : ' is ';
 				inviteMessage = getListOfPeepsText(eventObj.peeps, true) + ' wants you to ';
-				notifMessage = getListOfPeepsText(eventObj.peeps, true);
+				notifMessage = getListOfPeepsText(eventObj.peeps, true) + ' is ';
 			}
 
 			if (adding && adding.length) {

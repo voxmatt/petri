@@ -171,7 +171,7 @@ angular.module('SupAppIonic')
 			$scope.loading = true;
 
 			if (stepNum === 2) {
-				LocationSrvc.getFoursquareVenues(100, $scope.step.section, $scope.step.category).then(function(result){
+				LocationSrvc.getFoursquareVenues(100, null, $scope.step.category).then(function(result){
 					$scope.loading = false;
 					$('location-filter').focus();
 					$scope.moreOptions = {

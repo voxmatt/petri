@@ -46,7 +46,7 @@ angular.module('SupAppIonic').constant('FoursquareCnst', {
     },
     drinks: {
       narrow: [
-        '4d4b7105d754a06376d81259'
+        '4d4b7105d754a06376d81259',
       ],
       expansive: [
         '4d4b7105d754a06376d81259',
@@ -58,7 +58,9 @@ angular.module('SupAppIonic').constant('FoursquareCnst', {
         '52e81612bcbc57f1066b7a33',
         '4bf58dd8d48988d186941735',
         '4eb1bc533b7b2c5b1d4306cb',
-        '4f04b25d2fb6e1c99f3db0c0'
+        '4f04b25d2fb6e1c99f3db0c0',
+        '4bf58dd8d48988d181941735',
+        '4bf58dd8d48988d1f9941735'
       ]
     },
     food: {
