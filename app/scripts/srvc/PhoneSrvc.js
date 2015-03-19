@@ -15,12 +15,11 @@ angular.module('SupAppIonic')
 
         console.log(text);
 
-        // $http.post(link, null).success(function() {
-        //  d.resolve(text);
-        // }).error(function(data) {
-        //  d.reject(data);
-        // });
-
+        $http.post(link, null).success(function() {
+            d.resolve(text);
+        }).error(function(data) {
+            d.reject(data);
+        });
         return d.promise;
     }
 

@@ -2,293 +2,305 @@
 
 angular.module('SupAppIonic')
 
-	.factory('EventSrvc', function($q, Firebase, UserSrvc, PhoneSrvc, LoggingSrvc) {
+.factory('EventSrvc', function($q, Firebase, UserSrvc, PhoneSrvc, LoggingSrvc) {
 
-		var eventHalfLife = 3; // in hours - change this here
+    var eventHalfLife = 3; // in hours - change this here
 
-		var ref = new Firebase('https://petri.firebaseio.com/events');
+    var ref = new Firebase('https://petri.firebaseio.com/events');
 
-		function getEvents(){
-			var deferred = $q.defer();
+    function getEvents() {
+        var deferred = $q.defer();
 
-			ref.on('value', function(snapshot) {
-				deferred.resolve(snapshot.val());
-			}, function(error) {
-				deferred.reject(error);
-			});
+        ref.on('value', function(snapshot) {
+            deferred.resolve(snapshot.val());
+        }, function(error) {
+            deferred.reject(error);
+        });
 
-			return deferred.promise;
-		}
+        return deferred.promise;
+    }
 
-		function getEvent(id){
-			var d = $q.defer();
+    function getEvent(id) {
+        var d = $q.defer();
 
-			ref.child(id).on('value', function(snapshot) {
-				d.resolve(snapshot.val());
-			}, function(error) {
-				d.reject(error);
-			});
+        ref.child(id).on('value', function(snapshot) {
+            d.resolve(snapshot.val());
+        }, function(error) {
+            d.reject(error);
+        });
 
-			return d.promise;
-		}
+        return d.promise;
+    }
 
-		function saveEvent(newEvent){
+    function saveEvent(newEvent) {
 
-			var deferred = $q.defer();
-			var cleanEvent = angular.copy(newEvent);
-			var key = Date.now();
+        var deferred = $q.defer();
+        var cleanEvent = angular.copy(newEvent);
+        var key = Date.now();
 
-			if (newEvent.key) {
-				return updateEvent(newEvent.key, cleanEvent);
-			} else {
-				cleanEvent.key = key;
-			}
+        if (newEvent.key) {
+            return updateEvent(newEvent.key, cleanEvent);
+        } else {
+            cleanEvent.key = key;
+        }
 
-			ref.child(key).set(cleanEvent, function(error){
-				if (error) {
-					deferred.reject(error);
-				} else {
-					deferred.resolve(key);
-				}
-			});
+        ref.child(key).set(cleanEvent, function(error) {
+            if (error) {
+                deferred.reject(error);
+            } else {
+                deferred.resolve(key);
+            }
+        });
 
-			return deferred.promise;
-		}
+        return deferred.promise;
+    }
 
-		function updateEvent(eventId, data) {
-			var d = $q.defer();
-			
-			ref.child(eventId).update(data, function(error){
-				if (error) {
-					d.reject(error);
-				}	else {
-					d.resolve('Event Updated');
-				}
-			});
+    function updateEvent(eventId, data) {
+        var d = $q.defer();
 
-			return d.promise;
-		}
+        ref.child(eventId).update(data, function(error) {
+            if (error) {
+                d.reject(error);
+            } else {
+                d.resolve('Event Updated');
+            }
+        });
 
-		function removeEvent(eventId) {
-			ref.child(eventId).remove();
-		}
+        return d.promise;
+    }
 
-		function removeOldEvents(events) {
+    function removeEvent(eventId) {
+        ref.child(eventId).remove();
+    }
 
-			var millisHalflife = eventHalfLife * 60 * 60 * 1000;
-			var timeHorizon = Date.now() - millisHalflife;
+    function removeOldEvents(events) {
 
-			for (var key in events) {
-				if (events.hasOwnProperty(key)) {
-					if (Number(key) < timeHorizon) {
-						removeEvent(key);
-						delete events[key];
-					}
-				}
-			}
+        var millisHalflife = eventHalfLife * 60 * 60 * 1000;
+        var timeHorizon = Date.now() - millisHalflife;
 
-			return events;
-		}
+        for (var key in events) {
+            if (events.hasOwnProperty(key)) {
+                if (Number(key) < timeHorizon) {
+                    removeEvent(key);
+                    delete events[key];
+                }
+            }
+        }
 
-		function addUserToEvent(eventId, userId) {
+        return events;
+    }
 
-			var d = $q.defer();
+    function addUserToEvent(eventId, userId) {
 
-			if (!userId) {
-				userId = UserSrvc.getCurrentUserId();
-			}
+        var d = $q.defer();
 
-			UserSrvc.getUser(userId).then(function(user){
-				var userObj = getUserObjForEvent(user);
-				ref.child(eventId).child('peeps').push(userObj, function(error) {
-					if (error) {
-						d.reject(error);
-					} else {
-						d.resolve(userObj);
-					}
-				});
+        if (!userId) {
+            userId = UserSrvc.getCurrentUserId();
+        }
 
-			}, function(error) {
-				d.reject(error);
-			});
+        UserSrvc.getUser(userId).then(function(user) {
+            var userObj = getUserObjForEvent(user);
+            ref.child(eventId).child('peeps').push(userObj, function(error) {
+                if (error) {
+                    d.reject(error);
+                } else {
+                    d.resolve(userObj);
+                }
+            });
 
-			return d.promise;
-		}
+        }, function(error) {
+            d.reject(error);
+        });
 
-		function getUserObjForEvent(rawUser, userId) {
+        return d.promise;
+    }
 
-			if (!userId && !rawUser.contactId) {
-				// sorry, we need some sort of id
-				return null;
-			} else if (rawUser.contactId) {
-				userId = rawUser.contactId;
-			}
+    function getUserObjForEvent(rawUser, userId) {
 
-			var userObj = {
-				id: userId,
-				name: {
-					firstName: rawUser.firstName || '',
-					abbName: rawUser.firstName || '',
-					initials: rawUser.firstName[0] || ''
-				},
-				dupeNumbers: rawUser.dupeNumbers || null
-			};
-					
-			if (rawUser.lastName) {
-				userObj.name.abbName += ' ' + rawUser.lastName[0] + '.';
-				userObj.name.fullName = rawUser.firstName + ' ' + rawUser.lastName;
-				userObj.name.initials += rawUser.lastName[0];
-			}
+        if (!userId && !rawUser.contactId) {
+            // sorry, we need some sort of id
+            return null;
+        } else if (rawUser.contactId) {
+            userId = rawUser.contactId;
+        }
 
-			userObj.numTimesIncluded = rawUser.numTimesIncluded || 0;
+        var userObj = {
+            id: userId,
+            name: {
+                firstName: rawUser.firstName || '',
+                abbName: rawUser.firstName || '',
+                initials: rawUser.firstName[0] || ''
+            },
+            dupeNumbers: rawUser.dupeNumbers || null
+        };
 
-			return userObj;
-		}
+        if (rawUser.lastName) {
+            userObj.name.abbName += ' ' + rawUser.lastName[0] + '.';
+            userObj.name.fullName = rawUser.firstName + ' ' + rawUser.lastName;
+            userObj.name.initials += rawUser.lastName[0];
+        }
 
-		////////////////////////
-		//	Sending Invites		//
-		////////////////////////
+        userObj.numTimesIncluded = rawUser.numTimesIncluded || 0;
 
-		function sendInvites(eventObj, eventId, isEditingExisting, adding, inviting, currentUser, registeredNumbers) {
+        return userObj;
+    }
 
-			var inviteTexts = getInviteTexts(eventObj, adding, eventId);
+    ////////////////////////
+    //	Sending Invites		//
+    ////////////////////////
 
-			if (inviting && inviting.length) {
+    function sendInvites(eventObj, eventId, isEditingExisting, adding, inviting, currentUser, registeredNumbers) {
 
-				inviting.forEach(function(invitee){
-					var text = inviteTexts.reg;
+        var inviteTexts = getInviteTexts(eventObj, adding, eventId);
 
-					if (!invitee.registered) {
-						text = inviteTexts.nonReg + invitee.id;
-					}
+        if (inviting && inviting.length) {
 
-					invitee.numbers.forEach(function(number){
-						PhoneSrvc.sendMessage(number, text, currentUser.contactId);
-						LoggingSrvc.addLog('invite', currentUser, text, false);
-					});
+            inviting.forEach(function(invitee) {
+                var text = inviteTexts.reg;
 
-				});
+                if (!invitee.registered) {
+                    text = inviteTexts.nonReg + invitee.id;
+                }
 
-			}
+                invitee.numbers.forEach(function(number) {
+                    PhoneSrvc.sendMessage(number, text, currentUser.contactId);
+                    LoggingSrvc.addLog('invite', currentUser, text, false);
+                });
 
-			if (isEditingExisting && adding && adding.length) {
-				var text = inviteTexts.join;
+            });
 
-				eventObj.peeps.forEach(function(peep){
-					if (adding.indexOf(peep) !== -1) {
-						return;
-					}
+        }
 
-					peep.numbers.forEach(function(number){
-						PhoneSrvc.sendMessage(number, text, currentUser.contactId);
-						LoggingSrvc.addLog('join', currentUser, text, false);
-					});
-				});
-			}
+        if (isEditingExisting && adding && adding.length) {
+            var text = inviteTexts.join;
 
-			if (!isEditingExisting) {
-				registeredNumbers.forEach(function(number) {
+            eventObj.peeps.forEach(function(peep) {
+                if (adding.indexOf(peep) !== -1) {
+                    return;
+                }
 
-					if (parseInt(currentUser.contactId) === number) {
-						return;
-					}
+                peep.numbers.forEach(function(number) {
+                    PhoneSrvc.sendMessage(number, text, currentUser.contactId);
+                    LoggingSrvc.addLog('join', currentUser, text, false);
+                });
+            });
+        }
 
-					PhoneSrvc.sendMessage(number, inviteTexts.notif, currentUser.contactId);
-				});
-			}
-		}
+        if (!isEditingExisting) {
+            registeredNumbers.forEach(function(number) {
 
-		function getListOfPeepsText(peeps, useSimple) {
-			var text = '';
-			var num = peeps.length;
+                if (parseInt(currentUser.contactId) === number) {
+                    return;
+                }
 
-			if (useSimple) {
-				text += peeps[0].name.fullName;
+                PhoneSrvc.sendMessage(number, inviteTexts.notif, currentUser.contactId);
+            });
+        }
+    }
 
-				if (peeps.length > 1) {
-					text += ' (+ ' + (peeps.length - 1) + ' more)';
-				}
+    function getListOfPeepsText(peeps, useSimple) {
+        var text = '';
+        var num = peeps.length;
 
-			} else {
-				peeps.each(function(peep, index) {
-					if (peep.name.fullName) {
-						text += peep.name.fullName;
-					}
+        if (useSimple) {
+            text += peeps[0].name.fullName;
 
-					if (index === num -1) {
-						// last one, do nothing
-					} else if (index === num - 2) {
-						// second to last, need an 'and'
-						text += (num === 2) ? ' and ' : ', and ';
-					} else if (index !== num) {
-						// otherwise, it's comma time
-						text += ', ';
-					}
-				});
-			}
+            if (peeps.length > 1) {
+                text += ' (+ ' + (peeps.length - 1) + ' more)';
+            }
 
-			return text;
-		}
+        } else {
+            peeps.each(function(peep, index) {
+                if (peep.name.fullName) {
+                    text += peep.name.fullName;
+                }
 
-		function getInviteTexts(eventObj, adding, eventId) {
-			
-			var inviteMessage, notifMessage, joinMessage;
-			var appUrl = 'petri://event?=' + eventId;
-			var webUrl = 'https://petri.firebaseapp.com/#/respond/' + eventId;
+                if (index === num - 1) {
+                    // last one, do nothing
+                } else if (index === num - 2) {
+                    // second to last, need an 'and'
+                    text += (num === 2) ? ' and ' : ', and ';
+                } else if (index !== num) {
+                    // otherwise, it's comma time
+                    text += ', ';
+                }
+            });
+        }
 
-			if (eventObj.peeps && eventObj.peeps.length) {
-				// var inviteIsAre = (eventObj.peeps.length > 1) ? ' are ' : ' is ';
-				inviteMessage = getListOfPeepsText(eventObj.peeps, true) + ' wants you to ';
-				notifMessage = getListOfPeepsText(eventObj.peeps, true) + ' is ';
-			}
+        return text;
+    }
 
-			if (adding && adding.length) {
-				// var joinIsAre = (adding.length > 1) ? ' are ' : ' is ';
-				joinMessage = getListOfPeepsText(adding, true) + ' is joining you at ' + eventObj.location.name;
-			}
+    function getInviteTexts(eventObj, adding, eventId) {
 
-			switch (eventObj.type) {
-				case 'Music':
-				case 'Drinks':
-				case 'Food':
-				case 'Dancin\'':
-					inviteMessage += 'join for some ' + eventObj.type.toLowerCase();
-					notifMessage += 'going out for ' + eventObj.type.toLowerCase();
-					break;
-				case 'Movie':
-					inviteMessage += 'join for a movie';
-					notifMessage += 'going to see a movie';
-					break;
-				case 'Out doors':
-					inviteMessage += 'hang outdoors';
-					notifMessage += 'going to hang outdoors';
-					break;
-				case 'Chillin\'':
-					inviteMessage += 'hang out';
-					notifMessage += 'going to hang out';
-					break;
-			}
+        var inviteMessage, notifMessage, joinMessage;
+        var appUrl = 'petri://event?=' + eventId;
+        var webUrl = 'https://petri.firebaseapp.com/#/respond/' + eventId;
 
-			notifMessage += '. Check it out: ' + appUrl;
+        if (eventObj.peeps && eventObj.peeps.length) {
+            // var inviteIsAre = (eventObj.peeps.length > 1) ? ' are ' : ' is ';
+            inviteMessage = getListOfPeepsText(eventObj.peeps, true) + ' wants you to ';
+            notifMessage = getListOfPeepsText(eventObj.peeps, true) + ' is ';
+        }
 
-			return {
-				reg: inviteMessage + '. Join: ' + appUrl,
-				nonReg: inviteMessage + '. Respond: ' + webUrl + '/',
-				notif: notifMessage,
-				join: joinMessage
-			};
-		}
+        if (adding && adding.length) {
+            // var joinIsAre = (adding.length > 1) ? ' are ' : ' is ';
+            var peepsText = getListOfPeepsText(adding, true);
 
-		return {
-			getEvents: getEvents,
-			getEvent: getEvent,
-			saveEvent: saveEvent,
-			updateEvent: updateEvent,
-			removeEvent: removeEvent,
-			removeOldEvents: removeOldEvents,
-			addUserToEvent: addUserToEvent,
-			getUserObjForEvent: getUserObjForEvent,
-			sendInvites: sendInvites
-		};
-	}
-);
+            if (peepsText) {
+                joinMessage += peepsText;
+            } else if (adding[0]) {
+                joinMessage += adding[0].name.firstName;
+                if (adding[0].name.lastName) {
+                    joinMessage += ' ' + adding[0].name.lastName;
+                }
+            } else {
+                joinMessage += 'Someone';
+            }
+
+            joinMessage += ' is joining you at ' + eventObj.location.name;
+        }
+
+        switch (eventObj.type) {
+            case 'Music':
+            case 'Drinks':
+            case 'Food':
+            case 'Dancin\'':
+                inviteMessage += 'join for some ' + eventObj.type.toLowerCase();
+                notifMessage += 'going out for ' + eventObj.type.toLowerCase();
+                break;
+            case 'Movie':
+                inviteMessage += 'join for a movie';
+                notifMessage += 'going to see a movie';
+                break;
+            case 'Out doors':
+                inviteMessage += 'hang outdoors';
+                notifMessage += 'going to hang outdoors';
+                break;
+            case 'Chillin\'':
+                inviteMessage += 'hang out';
+                notifMessage += 'going to hang out';
+                break;
+        }
+
+        notifMessage += '. Check it out: ' + appUrl;
+
+        return {
+            reg: inviteMessage + '. Join: ' + appUrl,
+            nonReg: inviteMessage + '. Respond: ' + webUrl + '/',
+            notif: notifMessage,
+            join: joinMessage
+        };
+    }
+
+    return {
+        getEvents: getEvents,
+        getEvent: getEvent,
+        saveEvent: saveEvent,
+        updateEvent: updateEvent,
+        removeEvent: removeEvent,
+        removeOldEvents: removeOldEvents,
+        addUserToEvent: addUserToEvent,
+        getUserObjForEvent: getUserObjForEvent,
+        sendInvites: sendInvites
+    };
+});
