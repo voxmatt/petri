@@ -202,7 +202,7 @@ angular.module('SupAppIonic')
         var text = '';
         var num = peeps.length;
 
-        if (useSimple) {
+        if (useSimple && peeps[0] && peeps[0].name && peeps[0].name.fullName) {
             text += peeps[0].name.fullName;
 
             if (peeps.length > 1) {
