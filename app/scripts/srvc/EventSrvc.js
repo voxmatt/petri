@@ -232,7 +232,9 @@ angular.module('SupAppIonic')
 
     function getInviteTexts(eventObj, adding, eventId) {
 
-        var inviteMessage, notifMessage, joinMessage;
+        var inviteMessage = '';
+        var notifMessage = '';
+        var joinMessage = '';
         var appUrl = 'petri://event?=' + eventId;
         var webUrl = 'https://petri.firebaseapp.com/#/respond/' + eventId;
 
@@ -249,10 +251,13 @@ angular.module('SupAppIonic')
             if (peepsText) {
                 joinMessage += peepsText;
             } else if (adding[0]) {
+
                 joinMessage += adding[0].name.firstName;
+
                 if (adding[0].name.lastName) {
                     joinMessage += ' ' + adding[0].name.lastName;
                 }
+
             } else {
                 joinMessage += 'Someone';
             }
