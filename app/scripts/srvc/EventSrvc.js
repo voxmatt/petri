@@ -4,7 +4,7 @@ angular.module('SupAppIonic')
 
 .factory('EventSrvc', function($q, Firebase, UserSrvc, PhoneSrvc, LoggingSrvc) {
 
-    var eventHalfLife = 3; // in hours - change this here
+    var eventHalfLife = 90; // in minutes - change this here
 
     var ref = new Firebase('https://petri.firebaseio.com/events');
 
@@ -75,7 +75,7 @@ angular.module('SupAppIonic')
 
     function removeOldEvents(events) {
 
-        var millisHalflife = eventHalfLife * 60 * 60 * 1000;
+        var millisHalflife = eventHalfLife * 60 * 1000;
         var timeHorizon = Date.now() - millisHalflife;
 
         for (var key in events) {
@@ -155,6 +155,8 @@ angular.module('SupAppIonic')
 
         if (inviting && inviting.length) {
 
+            LoggingSrvc.addLog('invite', currentUser, text, false);
+
             inviting.forEach(function(invitee) {
                 var text = inviteTexts.reg;
 
@@ -164,7 +166,6 @@ angular.module('SupAppIonic')
 
                 invitee.numbers.forEach(function(number) {
                     PhoneSrvc.sendMessage(number, text, currentUser.contactId);
-                    LoggingSrvc.addLog('invite', currentUser, text, false);
                 });
 
             });
@@ -173,20 +174,21 @@ angular.module('SupAppIonic')
 
         if (isEditingExisting && adding && adding.length) {
             var text = inviteTexts.join;
+            LoggingSrvc.addLog('join', currentUser, text, false);
 
             eventObj.peeps.forEach(function(peep) {
-                if (adding.indexOf(peep) !== -1) {
+                if ((adding.indexOf(peep) !== -1) || !peep.numbers || !peep.numbers.length) {
                     return;
                 }
 
                 peep.numbers.forEach(function(number) {
                     PhoneSrvc.sendMessage(number, text, currentUser.contactId);
-                    LoggingSrvc.addLog('join', currentUser, text, false);
                 });
             });
         }
 
-        if (!isEditingExisting) {
+        // DISABLED SENDING INVITES TO EVERYONE
+        if (false) {
             registeredNumbers.forEach(function(number) {
 
                 if (parseInt(currentUser.contactId) === number) {

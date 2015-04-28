@@ -202,7 +202,7 @@ angular.module('SupAppIonic')
                 joinEvent();
             }
             var translation = 'translate3d(0,0,0)';
-            $('.orbit-circle-content').css({
+            $(draggingElm).css({
                 'transform': translation,
                 '-webkit-transform': translation
             });
@@ -308,13 +308,23 @@ angular.module('SupAppIonic')
 
         function joinEvent() {
             if (viewingEvent.peeps) {
+
+                var peepAlreadyJoined = viewingEvent.peeps.find(function(peep) {
+                    return peep.id === currentUser.contactId;
+                });
+
+                if (!!peepAlreadyJoined) {
+                    return;
+                }
+
                 var peep = EventSrvc.getUserObjForEvent(currentUser);
+                peep.joinTime = Date.now();
                 peep.registered = true;
                 viewingEvent.peeps.push(peep);
                 LoggingSrvc.addLog('join', currentUser, 'joined event', false);
 
                 UserSrvc.getRegisteredUsers().then(function(numbers) {
-                    EventSrvc.sendInvites(viewingEvent, [peep], [], true, [], currentUser, numbers);
+                    EventSrvc.sendInvites(viewingEvent, viewingEvent.key, true, [peep], [], currentUser, numbers);
                 }, function() {
                     LoggingSrvc.addLog('notification', currentUser, 'failed to get registered user numbers', true);
                 });
