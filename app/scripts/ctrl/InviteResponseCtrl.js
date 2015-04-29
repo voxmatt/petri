@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('SupAppIonic')
-    .controller('InviteResponseCtrl', function($scope, $stateParams, EventSrvc, LoggingSrvc, ContactSrvc, PhoneSrvc) {
+    .controller('InviteResponseCtrl', function($scope, $stateParams, EventSrvc, LoggingSrvc, ContactSrvc, PhoneSrvc, TrackingSrvc) {
 
         var eventId, contactId, peep;
         var peepWasInvited = false;
@@ -19,7 +19,7 @@ angular.module('SupAppIonic')
             contactId = $stateParams.contactId;
 
             if (!eventId || !contactId) {
-                LoggingSrvc.addLog('invite', null, 'Hit invite respond page but was missing evntId or contactId', true);
+                LoggingSrvc.addLog('invite', null, 'Hit invite respond page but was missing eventId or contactId', true);
                 $scope.error = 'Sorry, but you\'re in the wrong place... ';
                 return;
             }
@@ -129,6 +129,8 @@ angular.module('SupAppIonic')
                 show: true,
                 type: 'accepted'
             };
+
+            TrackingSrvc.joinedEvent(contactId);
 
             EventSrvc.sendInvites($scope.eventObj, eventId, true, [$scope.peep], null, $scope.peep, null);
             addPeepAndSaveEvent($scope.eventObj, $scope.peep);

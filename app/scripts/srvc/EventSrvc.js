@@ -2,7 +2,7 @@
 
 angular.module('SupAppIonic')
 
-.factory('EventSrvc', function($q, Firebase, UserSrvc, PhoneSrvc, LoggingSrvc) {
+.factory('EventSrvc', function($q, Firebase, UserSrvc, PhoneSrvc, LoggingSrvc, TrackingSrvc) {
 
     var eventHalfLife = 90; // in minutes - change this here
 
@@ -165,6 +165,7 @@ angular.module('SupAppIonic')
                 }
 
                 invitee.numbers.forEach(function(number) {
+                    TrackingSrvc.inviteSent(currentUser.contactId);
                     PhoneSrvc.sendMessage(number, text, currentUser.contactId);
                 });
 

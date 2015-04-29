@@ -6,7 +6,7 @@ angular.module('SupAppIonic')
         $timeout, $firebase, $firebaseSimpleLogin, EventSrvc,
         $ionicSlideBoxDelegate, $cordovaDialogs, ContactSrvc,
         LocationSrvc, StateSrvc, $ionicActionSheet, UserSrvc,
-        LoggingSrvc) {
+        LoggingSrvc, TrackingSrvc) {
 
         ////////////////////////
         //        INIT        //
@@ -80,6 +80,7 @@ angular.module('SupAppIonic')
                 currentUser = user;
                 var logMsg = 'seen in app';
                 LoggingSrvc.addLog('online', user, logMsg, false);
+                TrackingSrvc.appOpened(user.contactId);
             });
         });
 
@@ -322,6 +323,7 @@ angular.module('SupAppIonic')
                 peep.registered = true;
                 viewingEvent.peeps.push(peep);
                 LoggingSrvc.addLog('join', currentUser, 'joined event', false);
+                TrackingSrvc.joinedEvent(currentUser.contactId);
 
                 UserSrvc.getRegisteredUsers().then(function(numbers) {
                     EventSrvc.sendInvites(viewingEvent, viewingEvent.key, true, [peep], [], currentUser, numbers);
@@ -335,6 +337,7 @@ angular.module('SupAppIonic')
             EventSrvc.removeEvent(passedEvent.key);
 
             LoggingSrvc.addLog('delete', currentUser, 'deleted event', false);
+            TrackingSrvc.deletedEvent(currentUser.contactId);
 
             $state.transitionTo($state.current, $stateParams, {
                 reload: true,
