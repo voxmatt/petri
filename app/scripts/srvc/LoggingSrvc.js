@@ -3,25 +3,25 @@
 
 angular.module('SupAppIonic').factory('LoggingSrvc', function() {
 
-  var logRef = new Firebase('https://petri.firebaseio.com/logs');
+    var logRef = new Firebase('https://petri.firebaseio.com/logs');
 
-  function addLog(logType, user, logString, error) {
-    var logObj = {
-      type: logType,
-      user: user,
-      message: logString,
-      error: error,
-      time: Date.now()
+    function addLog(logType, user, logString, error) {
+        var logObj = {
+            type: logType,
+            user: user,
+            message: logString || '',
+            error: error || false,
+            time: Date.now()
+        };
+        logRef.child(Date.now()).update(logObj);
+    }
+
+    function getLogs() {
+
+    }
+
+    return {
+        addLog: addLog,
+        getLogs: getLogs
     };
-    logRef.child(Date.now()).update(logObj);
-  }
-
-  function getLogs() {
-
-  }
-
-  return {
-    addLog: addLog,
-    getLogs: getLogs
-  };
 });
