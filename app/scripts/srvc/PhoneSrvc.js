@@ -28,16 +28,12 @@ angular.module('SupAppIonic')
         var code = getRandomInt(1111, 9999);
         var text = 'Your Petri verification code is: ' + code;
 
-        //for whatever reason, this post only works from the phone
-        if (window.cordova) {
-            sendMessage(number, text).then(function() {
-                d.resolve(code);
-            }, function(error) {
-                d.resolve(error);
-            });
-        } else {
-            d.resolve('1111');
-        }
+        sendMessage(number, text).then(function() {
+            d.resolve(code);
+        }, function(error) {
+            d.resolve(error);
+        });
+
         return d.promise;
     }
 
